@@ -56,6 +56,12 @@ interface SafetyContextType {
   refreshData: () => Promise<void>;
 }
 
+const CANONICAL_WORKER_NAMES: Record<string, string> = {
+  'W-101': 'Arjun Verma',
+  'W-102': 'Vikram Patel',
+  'W-103': 'Ananya Sharma',
+};
+
 const SafetyContext = createContext<SafetyContextType | undefined>(undefined);
 
 export const SafetyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -70,7 +76,11 @@ export const SafetyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         fetchWorkers(),
         fetchActiveIncidents(),
       ]);
-      setWorkers(workersData);
+      const normalizedWorkers = workersData.map((w) => ({
+        ...w,
+        name: CANONICAL_WORKER_NAMES[w.workerId] || w.name,
+      }));
+      setWorkers(normalizedWorkers);
       setActiveIncidents(incidentsData);
     } catch (err) {
       console.error('[SafetyContext] Failed to load initial data:', err);
@@ -99,6 +109,7 @@ export const SafetyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           if (w.workerId === event.workerId || w.helmetId === event.helmetId) {
             return {
               ...w,
+              name: CANONICAL_WORKER_NAMES[w.workerId] || w.name,
               connectivityStatus: 'ONLINE' as ConnectivityStatus,
               lastSeen: event.timestamp,
               riskLevel: event.riskLevel,

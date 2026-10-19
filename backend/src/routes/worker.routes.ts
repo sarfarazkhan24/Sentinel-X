@@ -4,11 +4,13 @@ import {
   getWorkerById,
   getWorkerLatestReading,
   getWorkerHistory,
+  syncWorkerRoster,
 } from '../controllers/worker.controller.js';
 
 export const workerRouter = Router();
 
 workerRouter.get('/', getAllWorkers);
+workerRouter.post('/sync-roster', syncWorkerRoster);
 workerRouter.get('/:id', getWorkerById);
 workerRouter.get('/:id/latest', getWorkerLatestReading);
 workerRouter.get('/:id/history', getWorkerHistory);
