@@ -33,7 +33,7 @@ const initialMessages: Message[] = [
   {
     id: 'm-2',
     sender: 'worker',
-    senderName: 'Alex Carter',
+    senderName: 'Arjun Verma',
     helmetId: 'H-201',
     channel: 'H-201',
     text: 'H-201 online in Sector BA. Vitals nominal, MAX30102 pulse optical sync verified.',
@@ -43,7 +43,7 @@ const initialMessages: Message[] = [
   {
     id: 'm-3',
     sender: 'worker',
-    senderName: 'Marcus Vance',
+    senderName: 'Vikram Patel',
     helmetId: 'H-202',
     channel: 'H-202',
     text: 'H-202 at Level 8 Shaft 3 entrance. Atmospheric sensors calibrated.',
@@ -53,19 +53,19 @@ const initialMessages: Message[] = [
   {
     id: 'm-4',
     sender: 'supervisor',
-    senderName: 'Chief Officer (Control Room)',
+    senderName: 'Rajesh Nair (Control Lead)',
     channel: 'H-201',
-    text: 'Alex, keep an eye on combustible gas levels near the north seam.',
+    text: 'Arjun, keep an eye on combustible gas levels near the north seam.',
     timestamp: '08:14 AM',
     status: 'ACKNOWLEDGED',
   },
   {
     id: 'm-5',
     sender: 'worker',
-    senderName: 'Alex Carter',
+    senderName: 'Arjun Verma',
     helmetId: 'H-201',
     channel: 'H-201',
-    text: 'Copy that, Chief. MQ-5 reading 142 ppm, well under safety limit.',
+    text: 'Copy that, sir. MQ-5 reading 142 ppm, well under safety limit.',
     timestamp: '08:15 AM',
     status: 'ACKNOWLEDGED',
   },
@@ -80,9 +80,9 @@ export const CommsPage: React.FC = () => {
 
   const channels = [
     { id: 'ALL', name: 'Broadcast (All Helmets)', count: workers.length },
-    { id: 'H-201', name: 'H-201 (Alex Carter)', zone: 'Entrance B' },
-    { id: 'H-202', name: 'H-202 (Marcus Vance)', zone: 'Entrance C' },
-    { id: 'H-203', name: 'H-203 (Sarah Chen)', zone: 'Entrance D' },
+    { id: 'H-201', name: 'H-201 (Arjun Verma)', zone: 'Entrance B' },
+    { id: 'H-202', name: 'H-202 (Vikram Patel)', zone: 'Entrance C' },
+    { id: 'H-203', name: 'H-203 (Ananya Sharma)', zone: 'Entrance D' },
   ];
 
   const handleSendMessage = (textToSend?: string) => {

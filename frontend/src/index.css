@@ -20,10 +20,21 @@
 .bg-hazard-stripes {
   background: repeating-linear-gradient(
     -45deg,
-    #F59E0B,
-    #F59E0B 4px,
-    #1E293B 4px,
-    #1E293B 8px
+    #2563EB,
+    #2563EB 4px,
+    #0B0F17 4px,
+    #0B0F17 8px
+  );
+}
+
+/* Blue & Black tactical stripe pattern */
+.bg-blue-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    #2563EB,
+    #2563EB 4px,
+    #0B0F17 4px,
+    #0B0F17 8px
   );
 }
 

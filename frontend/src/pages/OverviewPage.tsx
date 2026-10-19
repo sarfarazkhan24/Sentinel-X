@@ -495,14 +495,14 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
         {/* LEFT COLUMN: Worker Cards Stack (3 cols on xl)             */}
         {/* ========================================================= */}
         <div className="xl:col-span-3 space-y-3.5">
-          {/* Worker 1: Alex Carter (W-101) */}
-          {renderWorkerSafetyCard(worker1, 'Alex Carter', 'H-201', 'Entrance B — Extraction Pit', 'BA')}
+          {/* Worker 1: Arjun Verma (W-101) */}
+          {renderWorkerSafetyCard(worker1, 'Arjun Verma', 'H-201', 'Entrance B — Extraction Pit', 'BA')}
 
-          {/* Worker 2: Marcus Vance (W-102) */}
-          {renderWorkerSafetyCard(worker2, 'Marcus Vance', 'H-202', 'Entrance C — Shaft 3', 'BB')}
+          {/* Worker 2: Vikram Patel (W-102) */}
+          {renderWorkerSafetyCard(worker2, 'Vikram Patel', 'H-202', 'Entrance C — Shaft 3', 'BB')}
 
-          {/* Worker 3: Sarah Chen / Elena Rostova (W-103) */}
-          {renderWorkerSafetyCard(worker3, 'Sarah Chen', 'H-203', 'Entrance D — Processing Plant', 'DA')}
+          {/* Worker 3: Ananya Sharma (W-103) */}
+          {renderWorkerSafetyCard(worker3, 'Ananya Sharma', 'H-203', 'Entrance D — Processing Plant', 'DA')}
         </div>
 
         {/* ========================================================= */}
@@ -606,7 +606,7 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                   <div className="text-[10px] font-mono text-slate-400">Clear</div>
                 </div>
 
-                {/* Sector BA (Active with Worker 1: Alex Carter) */}
+                {/* Sector BA (Active with Worker 1: Arjun Verma) */}
                 <div
                   onClick={() => {
                     setSelectedSector('BA');
@@ -629,7 +629,7 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                   {/* Active Worker Beacon */}
                   <div className="text-xs">
                     <div className="font-bold text-slate-800 text-[11px] truncate">
-                      {worker1?.name || 'Alex Carter'}
+                      {worker1?.name || 'Arjun Verma'}
                     </div>
                     <div className="flex items-center space-x-2 text-[10px] font-mono text-slate-500 mt-0.5">
                       <span className="flex items-center space-x-0.5">
@@ -710,7 +710,7 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                   </div>
                 </div>
 
-                {/* Sector BB (Worker 2: Marcus Vance) */}
+                {/* Sector BB (Worker 2: Vikram Patel) */}
                 <div
                   onClick={() => {
                     setSelectedSector('BB');
@@ -731,7 +731,7 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                   </div>
                   <div className="text-xs">
                     <div className="font-bold text-slate-800 text-[11px] truncate">
-                      {worker2?.name || 'Marcus Vance'}
+                      {worker2?.name || 'Vikram Patel'}
                     </div>
                     <div className="flex items-center space-x-2 text-[10px] font-mono text-slate-500 mt-0.5">
                       <span className="flex items-center space-x-0.5">
@@ -793,7 +793,7 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                   </div>
                 </div>
 
-                {/* Sector DA (Worker 3: Sarah Chen) */}
+                {/* Sector DA (Worker 3: Ananya Sharma) */}
                 <div
                   onClick={() => {
                     setSelectedSector('DA');
@@ -814,7 +814,7 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                   </div>
                   <div className="text-xs">
                     <div className="font-bold text-slate-800 text-[11px] truncate">
-                      {worker3?.name || 'Sarah Chen'}
+                      {worker3?.name || 'Ananya Sharma'}
                     </div>
                     <div className="flex items-center space-x-2 text-[10px] font-mono text-slate-500 mt-0.5">
                       <span className="flex items-center space-x-0.5">

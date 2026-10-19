@@ -120,9 +120,9 @@ export const IncidentHistoryPage: React.FC = () => {
             className="bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 text-slate-700 focus:outline-none focus:border-slate-400 cursor-pointer shadow-2xs"
           >
             <option value="">All Workers</option>
-            <option value="W-101">W-101 (Alex Carter)</option>
-            <option value="W-102">W-102 (Marcus Vance)</option>
-            <option value="W-103">W-103 (Sarah Chen)</option>
+            <option value="W-101">W-101 (Arjun Verma)</option>
+            <option value="W-102">W-102 (Vikram Patel)</option>
+            <option value="W-103">W-103 (Ananya Sharma)</option>
           </select>
         </div>
 

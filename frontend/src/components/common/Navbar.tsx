@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useSafety } from '../../context/SafetyContext';
+import { SentinelXLogo } from './SentinelXLogo';
 
 interface Props {
   activeTab: string;
@@ -49,15 +50,12 @@ export const Navbar: React.FC<Props> = ({
       <div className="max-w-[1720px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Left: Brand & Hazard Mark */}
         <div className="flex items-center space-x-3">
-          {/* Yellow/Black hazard stripe mark */}
-          <div className="flex items-center space-x-2">
-            <div className="w-5 h-5 rounded-md bg-hazard-stripes shadow-sm" />
-            <span className="text-base font-extrabold tracking-wider text-slate-900 font-sans">
-              SENTINEL<span className="text-amber-500">X</span>
-            </span>
+          {/* Unique Blue & Black SentinelX Brand */}
+          <div className="flex items-center space-x-1">
+            <SentinelXLogo size={32} withWordmark={true} />
             <button
               onClick={() => refreshData()}
-              className="p-1.5 rounded-full text-slate-400 hover:text-slate-800 hover:bg-white/80 transition shadow-2xs ml-1"
+              className="p-1.5 rounded-full text-slate-400 hover:text-blue-600 hover:bg-white/80 transition shadow-2xs ml-0.5"
               title="Refresh live data"
             >
               <RotateCw className="w-3.5 h-3.5" />
@@ -172,14 +170,14 @@ export const Navbar: React.FC<Props> = ({
             )}
           </button>
 
-          {/* Operator Profile Avatar with Hard Hat */}
+          {/* Operator Profile Avatar with Indian Name & Blue/Black Accent */}
           <div className="flex items-center space-x-2 bg-white pl-1 pr-3 py-1 rounded-full border border-slate-200/80 shadow-sm">
-            <div className="w-7 h-7 rounded-full bg-amber-400 border border-amber-500 flex items-center justify-center text-slate-900 font-bold text-xs shadow-inner">
+            <div className="w-7 h-7 rounded-full bg-[#0B0F17] border border-blue-500/50 flex items-center justify-center text-blue-400 font-bold text-xs shadow-inner">
               👷
             </div>
             <div className="text-left hidden md:block">
-              <div className="text-xs font-bold text-slate-800 leading-tight">Chief Officer</div>
-              <div className="text-[10px] text-slate-400 font-mono leading-none">Supervisor</div>
+              <div className="text-xs font-bold text-slate-800 leading-tight">Rajesh Nair</div>
+              <div className="text-[10px] text-blue-600 font-mono font-medium leading-none">Safety Director</div>
             </div>
           </div>
         </div>

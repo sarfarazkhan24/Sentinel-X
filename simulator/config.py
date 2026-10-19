@@ -9,7 +9,7 @@ ALERT_TOPIC_TEMPLATE = "sentinelx/{helmet_id}/alert"
 SIMULATED_WORKERS = [
     {
         "worker_id": "W-101",
-        "name": "Alex Carter",
+        "name": "Arjun Verma",
         "helmet_id": "H-201",
         "assigned_zone": "Zone A - Extraction Pit",
         "base_hr": 75.0,
@@ -20,7 +20,7 @@ SIMULATED_WORKERS = [
     },
     {
         "worker_id": "W-102",
-        "name": "Marcus Vance",
+        "name": "Vikram Patel",
         "helmet_id": "H-202",
         "assigned_zone": "Zone B - Shaft 3",
         "base_hr": 78.0,
@@ -31,7 +31,7 @@ SIMULATED_WORKERS = [
     },
     {
         "worker_id": "W-103",
-        "name": "Elena Rostova",
+        "name": "Ananya Sharma",
         "helmet_id": "H-203",
         "assigned_zone": "Zone C - Processing Plant",
         "base_hr": 72.0,

@@ -14,19 +14,19 @@ async function main() {
   const workersData = [
     {
       workerId: 'W-101',
-      name: 'Alex Carter',
+      name: 'Arjun Verma',
       assignedZone: 'Zone A - Extraction Pit',
       helmetId: 'H-201',
     },
     {
       workerId: 'W-102',
-      name: 'Marcus Vance',
+      name: 'Vikram Patel',
       assignedZone: 'Zone B - Shaft 3',
       helmetId: 'H-202',
     },
     {
       workerId: 'W-103',
-      name: 'Elena Rostova',
+      name: 'Ananya Sharma',
       assignedZone: 'Zone C - Processing Plant',
       helmetId: 'H-203',
     },
