@@ -8,33 +8,30 @@ interface Props {
 
 export const SeverityBadge: React.FC<Props> = ({ severity, size = 'md' }) => {
   const styles = {
-    NORMAL: 'bg-emerald-950/80 text-emerald-400 border-emerald-600/40',
-    WARNING: 'bg-amber-950/80 text-amber-400 border-amber-600/40',
-    HIGH_RISK: 'bg-orange-950/80 text-orange-400 border-orange-600/40',
-    CRITICAL: 'bg-red-950/90 text-red-400 border-red-500 animate-pulse',
+    NORMAL: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+    WARNING: 'bg-amber-50 text-amber-700 border-amber-200/80',
+    HIGH_RISK: 'bg-orange-50 text-orange-700 border-orange-200/80',
+    CRITICAL: 'bg-rose-50 text-rose-700 border-rose-300 font-semibold animate-pulse',
+  };
+
+  const dotColors = {
+    NORMAL: 'bg-emerald-500',
+    WARNING: 'bg-amber-500',
+    HIGH_RISK: 'bg-orange-500',
+    CRITICAL: 'bg-rose-600',
   };
 
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-xs px-2.5 py-1',
+    sm: 'text-[10px] px-2 py-0.5 tracking-wide',
+    md: 'text-xs px-2.5 py-1 tracking-wide',
     lg: 'text-sm px-3.5 py-1.5 font-semibold',
   };
 
   return (
     <span
-      className={`inline-flex items-center font-mono font-medium rounded-full border ${styles[severity] || styles.NORMAL} ${sizeClasses[size]}`}
+      className={`inline-flex items-center font-medium rounded-full border ${styles[severity] || styles.NORMAL} ${sizeClasses[size]}`}
     >
-      <span
-        className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-          severity === 'CRITICAL'
-            ? 'bg-red-400'
-            : severity === 'HIGH_RISK'
-            ? 'bg-orange-400'
-            : severity === 'WARNING'
-            ? 'bg-amber-400'
-            : 'bg-emerald-400'
-        }`}
-      />
+      <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${dotColors[severity] || 'bg-slate-400'}`} />
       {severity.replace('_', ' ')}
     </span>
   );

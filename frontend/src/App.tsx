@@ -8,9 +8,12 @@ import { WorkerDetailsPage } from './pages/WorkerDetailsPage';
 import { EmergencyPage } from './pages/EmergencyPage';
 import { IncidentHistoryPage } from './pages/IncidentHistoryPage';
 
+import { SidebarIconRail } from './components/common/SidebarIconRail';
+
 const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('W-101');
+  const [selectedZone, setSelectedZone] = useState<string>('All');
 
   const handleSelectWorker = (workerId: string) => {
     setSelectedWorkerId(workerId);
@@ -18,45 +21,57 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B1120] text-slate-100">
-      {/* Top Navigation */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="min-h-screen flex flex-col bg-[#ECEEF1] text-slate-800 font-sans selection:bg-amber-200">
+      {/* Top Industrial Navigation */}
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        selectedZone={selectedZone}
+        setSelectedZone={setSelectedZone}
+      />
 
       {/* Emergency Audio/Visual Banner */}
       <EmergencyBanner onGoToEmergency={() => setActiveTab('emergency')} />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'overview' && (
-          <OverviewPage
-            onSelectWorker={handleSelectWorker}
-            onGoToEmergency={() => setActiveTab('emergency')}
-          />
-        )}
+      {/* Main Container with Left Sidebar Rail and Dashboard Canvas */}
+      <div className="flex-1 flex max-w-[1720px] w-full mx-auto">
+        {/* Left Circular Icon Rail */}
+        <SidebarIconRail activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {activeTab === 'monitoring' && (
-          <LiveMonitoringPage onSelectWorker={handleSelectWorker} />
-        )}
+        {/* Dashboard Main Content */}
+        <main className="flex-1 w-full p-2 sm:p-4 overflow-x-hidden">
+          {activeTab === 'overview' && (
+            <OverviewPage
+              onSelectWorker={handleSelectWorker}
+              onGoToEmergency={() => setActiveTab('emergency')}
+            />
+          )}
 
-        {activeTab === 'workers' && (
-          <WorkerDetailsPage
-            selectedWorkerId={selectedWorkerId}
-            onSelectWorker={setSelectedWorkerId}
-          />
-        )}
+          {activeTab === 'monitoring' && (
+            <LiveMonitoringPage onSelectWorker={handleSelectWorker} />
+          )}
 
-        {activeTab === 'emergency' && <EmergencyPage />}
+          {activeTab === 'workers' && (
+            <WorkerDetailsPage
+              selectedWorkerId={selectedWorkerId}
+              onSelectWorker={setSelectedWorkerId}
+            />
+          )}
 
-        {activeTab === 'history' && <IncidentHistoryPage />}
-      </main>
+          {activeTab === 'emergency' && <EmergencyPage />}
 
-      {/* Footer */}
-      <footer className="bg-[#070D18] border-t border-slate-900 py-4 text-xs font-mono text-slate-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div>
-            SentinelX Industrial Safety Prototype &bull; Source shown on each reading and incident
+          {activeTab === 'history' && <IncidentHistoryPage />}
+        </main>
+      </div>
+
+      {/* Industrial Footer */}
+      <footer className="bg-white/80 border-t border-slate-200/90 py-3 text-xs font-mono text-slate-500">
+        <div className="max-w-[1720px] mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+            <span>SentinelX Industrial Safety Prototype &bull; Real-time Multi-Sensor Telemetry</span>
           </div>
-          <div className="text-amber-500/80">
+          <div className="text-slate-400 text-[11px]">
             Educational prototype. Sensor readings and alerts require validation; no medical or mine-safety certification.
           </div>
         </div>
@@ -64,6 +79,7 @@ const AppContent: React.FC = () => {
     </div>
   );
 };
+
 
 export const App: React.FC = () => {
   return (

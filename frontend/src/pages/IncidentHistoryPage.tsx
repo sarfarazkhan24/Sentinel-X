@@ -64,30 +64,32 @@ export const IncidentHistoryPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="bg-white/80 backdrop-blur rounded-[24px] border border-slate-200/80 shadow-xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold font-mono text-slate-100 flex items-center space-x-2">
-            <History className="w-5 h-5 text-teal-400" />
-            <span>Industrial Incident &amp; Audit Trail</span>
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Stored incident records. Older records without source information are marked unknown.
+          <div className="flex items-center space-x-2">
+            <History className="w-5 h-5 text-amber-500" />
+            <h1 className="text-lg font-bold text-slate-900 tracking-tight font-sans">
+              Industrial Incident &amp; Audit Trail
+            </h1>
+          </div>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Immutable log of all environmental spikes, biometrics hazards, and triage actions.
           </p>
         </div>
 
         <div className="flex items-center space-x-2">
           <button
             onClick={exportCSV}
-            className="flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-mono px-3 py-2 rounded-lg transition"
+            className="flex items-center space-x-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-full transition shadow-2xs"
           >
-            <Download className="w-3.5 h-3.5 text-teal-400" />
+            <Download className="w-3.5 h-3.5 text-slate-500" />
             <span>EXPORT CSV</span>
           </button>
           <button
             onClick={loadIncidents}
-            className="flex items-center space-x-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-mono font-bold px-3 py-2 rounded-lg transition"
+            className="flex items-center space-x-1.5 bg-[#18191B] hover:bg-slate-800 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full transition shadow-xs"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>REFRESH</span>
@@ -96,41 +98,41 @@ export const IncidentHistoryPage: React.FC = () => {
       </div>
 
       {/* Filter Controls Bar */}
-      <div className="bg-[#0F172A] border border-slate-800 rounded-xl p-4 flex flex-wrap items-center gap-4 text-xs font-mono">
+      <div className="bg-white rounded-[24px] border border-slate-200/90 shadow-xs p-4 flex flex-wrap items-center gap-3 text-xs">
         {/* Search Input */}
-        <div className="flex-1 min-w-[200px] relative">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+        <div className="flex-1 min-w-[220px] relative">
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search incident type, description, worker..."
-            className="w-full bg-[#0B1120] border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-teal-500"
+            className="w-full bg-slate-50 border border-slate-200 rounded-full pl-9 pr-3 py-1.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 shadow-2xs"
           />
         </div>
 
         {/* Worker Filter */}
         <div className="flex items-center space-x-2">
-          <span className="text-slate-400">Worker:</span>
+          <span className="text-slate-500 font-medium">Worker:</span>
           <select
             value={selectedWorker}
             onChange={(e) => setSelectedWorker(e.target.value)}
-            className="bg-[#0B1120] border border-slate-800 rounded-lg px-2.5 py-2 text-slate-200 focus:outline-none focus:border-teal-500"
+            className="bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 text-slate-700 focus:outline-none focus:border-slate-400 cursor-pointer shadow-2xs"
           >
             <option value="">All Workers</option>
             <option value="W-101">W-101 (Alex Carter)</option>
             <option value="W-102">W-102 (Marcus Vance)</option>
-            <option value="W-103">W-103 (Elena Rostova)</option>
+            <option value="W-103">W-103 (Sarah Chen)</option>
           </select>
         </div>
 
         {/* Severity Filter */}
         <div className="flex items-center space-x-2">
-          <span className="text-slate-400">Severity:</span>
+          <span className="text-slate-500 font-medium">Severity:</span>
           <select
             value={selectedSeverity}
             onChange={(e) => setSelectedSeverity(e.target.value)}
-            className="bg-[#0B1120] border border-slate-800 rounded-lg px-2.5 py-2 text-slate-200 focus:outline-none focus:border-teal-500"
+            className="bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 text-slate-700 focus:outline-none focus:border-slate-400 cursor-pointer shadow-2xs"
           >
             <option value="">All Severities</option>
             <option value="CRITICAL">CRITICAL</option>
@@ -142,11 +144,11 @@ export const IncidentHistoryPage: React.FC = () => {
 
         {/* Status Filter */}
         <div className="flex items-center space-x-2">
-          <span className="text-slate-400">Status:</span>
+          <span className="text-slate-500 font-medium">Status:</span>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="bg-[#0B1120] border border-slate-800 rounded-lg px-2.5 py-2 text-slate-200 focus:outline-none focus:border-teal-500"
+            className="bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 text-slate-700 focus:outline-none focus:border-slate-400 cursor-pointer shadow-2xs"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">ACTIVE</option>
@@ -157,71 +159,74 @@ export const IncidentHistoryPage: React.FC = () => {
       </div>
 
       {/* Incidents Table */}
-      <div className="bg-[#0F172A] border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+      <div className="bg-white rounded-[24px] border border-slate-200/90 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-slate-900/90 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200 uppercase tracking-wider text-[11px] font-mono">
               <tr>
-                <th className="py-3 px-4">Severity</th>
-                <th className="py-3 px-4">Incident Type</th>
-                <th className="py-3 px-4">Source</th>
-                <th className="py-3 px-4">Worker / Helmet</th>
-                <th className="py-3 px-4">Description</th>
-                <th className="py-3 px-4">Detected</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Resolution</th>
+                <th className="py-3 px-4 font-semibold">Severity</th>
+                <th className="py-3 px-4 font-semibold">Incident Type</th>
+                <th className="py-3 px-4 font-semibold">Source</th>
+                <th className="py-3 px-4 font-semibold">Worker / Helmet</th>
+                <th className="py-3 px-4 font-semibold">Description</th>
+                <th className="py-3 px-4 font-semibold">Detected</th>
+                <th className="py-3 px-4 font-semibold">Status</th>
+                <th className="py-3 px-4 font-semibold">Resolution</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80 text-slate-300">
+            <tbody className="divide-y divide-slate-100 text-slate-700 font-sans">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500">
+                  <td colSpan={8} className="py-8 text-center text-slate-400 font-mono">
                     No incident records match the selected criteria.
                   </td>
                 </tr>
               ) : (
                 filtered.map((item) => (
-                  <tr key={item.incidentId} className="hover:bg-slate-800/40 transition">
+                  <tr key={item.incidentId} className="hover:bg-slate-50/70 transition">
                     <td className="py-3 px-4">
                       <SeverityBadge severity={item.severity} size="sm" />
                     </td>
-                    <td className="py-3 px-4 font-bold text-slate-100">
+                    <td className="py-3 px-4 font-bold text-slate-900">
                       {item.incidentType}
                     </td>
-                    <td className="py-3 px-4"><SourceBadge isSimulated={item.isSimulated} /></td>
-                    <td className="py-3 px-4 text-teal-400">
-                      {item.workerId} <span className="text-slate-500">({item.helmetId})</span>
+                    <td className="py-3 px-4">
+                      <SourceBadge isSimulated={item.isSimulated} />
                     </td>
-                    <td className="py-3 px-4 max-w-xs truncate text-slate-300" title={item.description}>
+                    <td className="py-3 px-4 font-mono">
+                      <span className="font-bold text-slate-800">{item.workerId}</span>{' '}
+                      <span className="text-slate-400">({item.helmetId})</span>
+                    </td>
+                    <td className="py-3 px-4 max-w-xs truncate text-slate-600" title={item.description}>
                       {item.description}
                     </td>
-                    <td className="py-3 px-4 text-slate-400 whitespace-nowrap">
+                    <td className="py-3 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">
                       {new Date(item.detectedAt).toLocaleString()}
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold shadow-2xs ${
                           item.status === 'ACTIVE'
-                            ? 'bg-red-950 text-red-400 border border-red-800'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
                             : item.status === 'ACKNOWLEDGED'
-                            ? 'bg-amber-950 text-amber-400 border border-amber-800'
-                            : 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         }`}
                       >
                         {item.status}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-400 whitespace-nowrap text-[11px]">
+                    <td className="py-3 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">
                       {item.resolvedAt ? (
-                        <span className="text-emerald-400">
+                        <span className="text-emerald-700 font-medium">
                           Resolved {new Date(item.resolvedAt).toLocaleTimeString()}
                         </span>
                       ) : item.acknowledgedAt ? (
-                        <span className="text-amber-400">
+                        <span className="text-amber-700 font-medium">
                           Ack by {item.acknowledgedBy}
                         </span>
                       ) : (
-                        <span className="text-red-400">Pending action</span>
+                        <span className="text-rose-600 font-medium">Pending action</span>
                       )}
                     </td>
                   </tr>
