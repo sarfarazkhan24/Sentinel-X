@@ -4,24 +4,63 @@
 
 @layer base {
   body {
-    background-color: #0B1120;
-    color: #F8FAFC;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #ECEEF1;
+    color: #1E293B;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 }
 
-/* Custom scrollbars for industrial aesthetic */
+/* Subtle dot-grid pattern matching command center design */
+.bg-dot-grid {
+  background-image: radial-gradient(#CBD5E1 1.25px, transparent 1.25px);
+  background-size: 18px 18px;
+}
+
+/* Striped hazard pattern */
+.bg-hazard-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    #2563EB,
+    #2563EB 4px,
+    #0B0F17 4px,
+    #0B0F17 8px
+  );
+}
+
+/* Blue & Black tactical stripe pattern */
+.bg-blue-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    #2563EB,
+    #2563EB 4px,
+    #0B0F17 4px,
+    #0B0F17 8px
+  );
+}
+
+/* Diagonal dashed walkway pattern for spatial sectors */
+.walkway-pattern {
+  background: repeating-linear-gradient(
+    -45deg,
+    #E2E8F0,
+    #E2E8F0 6px,
+    #F8FAFC 6px,
+    #F8FAFC 12px
+  );
+}
+
+/* Custom sleek scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0B1120;
+  background: #ECEEF1;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 3px;
+  background: #CBD5E1;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94A3B8;
 }

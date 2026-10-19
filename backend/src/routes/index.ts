@@ -2,12 +2,14 @@ import { Router } from 'express';
 import { workerRouter } from './worker.routes.js';
 import { incidentRouter } from './incident.routes.js';
 import { helmetRouter } from './helmet.routes.js';
+import { scraperRouter } from './scraper.routes.js';
 
 export const apiRouter = Router();
 
 apiRouter.use('/workers', workerRouter);
 apiRouter.use('/incidents', incidentRouter);
 apiRouter.use('/helmets', helmetRouter);
+apiRouter.use('/scraper', scraperRouter);
 
 apiRouter.get('/health', (req, res) => {
   res.json({

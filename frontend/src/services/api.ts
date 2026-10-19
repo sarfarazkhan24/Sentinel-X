@@ -1,6 +1,10 @@
 import { Worker, Incident, SensorReading } from '../types';
 
-const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:5001';
+const BACKEND_URL =
+  (import.meta as any).env?.VITE_BACKEND_URL ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+    ? 'https://sentinel-x-slgq.onrender.com'
+    : 'http://localhost:5001');
 const API_BASE = `${BACKEND_URL}/api`;
 
 export async function fetchWorkers(): Promise<Worker[]> {
@@ -62,3 +66,34 @@ export async function resolveIncident(id: string): Promise<Incident> {
   if (!res.ok) throw new Error('Failed to resolve incident');
   return res.json();
 }
+
+export interface NearbyMiningActivity {
+  id: string;
+  title: string;
+  company: string;
+  category: 'Blasting' | 'Excavation' | 'Heavy Transport' | 'Drilling' | 'Structural Concrete';
+  distanceKm: number;
+  direction: 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
+  coordinates: string;
+  riskLevel: 'LOW' | 'MODERATE' | 'HIGH';
+  status: 'ACTIVE NOW' | 'SCHEDULED' | 'STANDBY';
+  impactDescription: string;
+  source: string;
+  timestamp: string;
+}
+
+export interface ScraperResponse {
+  status: string;
+  region: string;
+  updatedAt: string;
+  activeCount: number;
+  totalNotices: number;
+  activities: NearbyMiningActivity[];
+}
+
+export async function fetchNearbyActivities(): Promise<ScraperResponse> {
+  const res = await fetch(`${API_BASE}/scraper/nearby-activities`);
+  if (!res.ok) throw new Error('Failed to fetch nearby activities');
+  return res.json();
+}
+

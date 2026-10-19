@@ -2,6 +2,12 @@ import { Request, Response } from 'express';
 import { prisma } from '../config/db.js';
 import { IncidentStatus } from '../types/index.js';
 
+const CANONICAL_WORKER_NAMES: Record<string, string> = {
+  'W-101': 'Arjun Verma',
+  'W-102': 'Vikram Patel',
+  'W-103': 'Ananya Sharma',
+};
+
 export async function getAllWorkers(req: Request, res: Response) {
   try {
     const workers = await prisma.worker.findMany({
@@ -20,20 +26,59 @@ export async function getAllWorkers(req: Request, res: Response) {
       orderBy: { workerId: 'asc' },
     });
 
-    // Format output with latest reading summary
-    const formatted = workers.map((w) => ({
-      workerId: w.workerId,
-      name: w.name,
-      assignedZone: w.assignedZone,
-      helmetId: w.helmet?.helmetId || null,
-      connectivityStatus: w.helmet?.connectivityStatus || 'OFFLINE',
-      lastSeen: w.helmet?.lastSeen || null,
-      latestReading: w.readings[0] || null,
-      activeIncidents: w.incidents,
-      hasActiveAlert: w.incidents.length > 0,
-    }));
+    // Format output with latest reading summary and ensure canonical Indian names
+    const formatted = workers.map((w) => {
+      const canonicalName = CANONICAL_WORKER_NAMES[w.workerId] || w.name;
+      if (CANONICAL_WORKER_NAMES[w.workerId] && w.name !== canonicalName) {
+        // Auto-heal database record in the background
+        prisma.worker
+          .update({
+            where: { workerId: w.workerId },
+            data: { name: canonicalName },
+          })
+          .catch((err) => console.warn(`[Worker Sync] Failed to update ${w.workerId}:`, err.message));
+      }
+
+      return {
+        workerId: w.workerId,
+        name: canonicalName,
+        assignedZone: w.assignedZone,
+        helmetId: w.helmet?.helmetId || null,
+        connectivityStatus: w.helmet?.connectivityStatus || 'OFFLINE',
+        lastSeen: w.helmet?.lastSeen || null,
+        latestReading: w.readings[0] || null,
+        activeIncidents: w.incidents,
+        hasActiveAlert: w.incidents.length > 0,
+      };
+    });
 
     res.json(formatted);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function syncWorkerRoster(req: Request, res: Response) {
+  try {
+    await Promise.all([
+      prisma.worker.updateMany({
+        where: { workerId: 'W-101' },
+        data: { name: 'Arjun Verma' },
+      }),
+      prisma.worker.updateMany({
+        where: { workerId: 'W-102' },
+        data: { name: 'Vikram Patel' },
+      }),
+      prisma.worker.updateMany({
+        where: { workerId: 'W-103' },
+        data: { name: 'Ananya Sharma' },
+      }),
+    ]);
+    res.json({
+      success: true,
+      message: 'Worker roster synchronized to canonical Indian personnel names',
+      roster: CANONICAL_WORKER_NAMES,
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -61,7 +106,17 @@ export async function getWorkerById(req: Request, res: Response) {
       return res.status(404).json({ error: `Worker ${id} not found` });
     }
 
-    res.json(worker);
+    const canonicalName = CANONICAL_WORKER_NAMES[worker.workerId] || worker.name;
+    if (CANONICAL_WORKER_NAMES[worker.workerId] && worker.name !== canonicalName) {
+      prisma.worker
+        .update({
+          where: { workerId: worker.workerId },
+          data: { name: canonicalName },
+        })
+        .catch(() => {});
+    }
+
+    res.json({ ...worker, name: canonicalName });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
