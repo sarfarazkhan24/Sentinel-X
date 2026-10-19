@@ -150,12 +150,12 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
         </div>
       </section>
 
-      {/* 2. MAIN 2-COLUMN INDUSTRIAL COMMAND GRID */}
+      {/* 2. MAIN 3-COLUMN INDUSTRIAL COMMAND GRID */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
         {/* ========================================================= */}
-        {/* LEFT COLUMN: Worker Cards Stack (4 cols on xl)             */}
+        {/* LEFT COLUMN: Worker Cards Stack (3 cols on xl)             */}
         {/* ========================================================= */}
-        <div className="xl:col-span-4 space-y-3.5">
+        <div className="xl:col-span-3 space-y-3.5">
           {/* Card 1: Worker 1 (Alex Carter / H-201) */}
           <div
             onClick={() => worker1 && onSelectWorker(worker1.workerId)}
@@ -439,9 +439,9 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
         </div>
 
         {/* ========================================================= */}
-        {/* RIGHT COLUMN: Spatial Sector Grid (8 cols on xl)           */}
+        {/* CENTER COLUMN: Spatial Sector Grid (5 cols on xl)          */}
         {/* ========================================================= */}
-        <div className="xl:col-span-8 space-y-3">
+        <div className="xl:col-span-5 space-y-3">
           {/* Top Floating Controls Bar */}
           <div className="flex items-center justify-between">
             {/* Sector Map Title */}
