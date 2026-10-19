@@ -13,10 +13,17 @@ import {
   Activity,
   Heart,
   Wind,
+  Radar,
+  RefreshCw,
+  ExternalLink,
+  Flame,
+  MapPin,
+  Compass,
 } from 'lucide-react';
 
 import { useSafety } from '../context/SafetyContext';
 import { SourceBadge } from '../components/common/SourceBadge';
+import { fetchNearbyActivities, NearbyMiningActivity } from '../services/api';
 
 interface Props {
   onSelectWorker: (workerId: string) => void;
@@ -32,6 +39,32 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
 
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
+
+  // Regional Mining & Heavy Construction Scraper Feed State
+  const [activities, setActivities] = useState<NearbyMiningActivity[]>([]);
+  const [isScraping, setIsScraping] = useState<boolean>(false);
+  const [lastScrapedTime, setLastScrapedTime] = useState<string>('Live (1 min ago)');
+  const [filterCategory, setFilterCategory] = useState<string>('ALL');
+
+  const loadScraperData = React.useCallback(async () => {
+    setIsScraping(true);
+    try {
+      const data = await fetchNearbyActivities();
+      setActivities(data.activities);
+      setLastScrapedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    } catch (err) {
+      console.error('[Scraper] Failed to fetch activities:', err);
+    } finally {
+      setIsScraping(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadScraperData();
+    // Auto re-poll/scrape every 60 seconds
+    const interval = setInterval(loadScraperData, 60000);
+    return () => clearInterval(interval);
+  }, [loadScraperData]);
 
   // Map 3 workers to specific mine sectors
   const worker1 = workers.find((w) => w.workerId === 'W-101') || workers[0];
@@ -727,6 +760,145 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                   <div className="text-[10px] font-mono text-slate-400">Exit</div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* RIGHT COLUMN: Regional Mining & Construction Scraper Panel */}
+        {/* ========================================================= */}
+        <div className="xl:col-span-4 space-y-3.5">
+          <div className="bg-white rounded-[24px] p-4.5 border border-slate-200/90 shadow-xs space-y-3">
+            {/* Header with Live Scraper Radar Icon & Refresh */}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <div className="p-1.5 rounded-lg bg-amber-500 text-white shadow-xs">
+                    <Radar className={`w-4 h-4 ${isScraping ? 'animate-spin' : ''}`} />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900 font-sans leading-tight">
+                      Regional Activity Scraper
+                    </h2>
+                    <p className="text-[10px] font-mono text-slate-400">
+                      Nearby Mining &amp; Heavy Construction Feeds
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => loadScraperData()}
+                disabled={isScraping}
+                className="p-1.5 rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition shadow-2xs"
+                title="Re-scrape nearby activity notices"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isScraping ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+
+            {/* Scraper Status Bar */}
+            <div className="flex items-center justify-between text-[11px] font-mono bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5">
+              <span className="flex items-center space-x-1.5 text-slate-600">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Radius: &le; 10 km</span>
+              </span>
+              <span className="text-slate-400">
+                Sync: {lastScrapedTime}
+              </span>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex items-center space-x-1 overflow-x-auto pb-1 text-[10px] font-mono">
+              {['ALL', 'Blasting', 'Heavy Transport', 'Drilling', 'Excavation'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setFilterCategory(cat)}
+                  className={`px-2.5 py-1 rounded-full whitespace-nowrap transition border ${
+                    filterCategory === cat
+                      ? 'bg-[#18191B] text-white border-[#18191B] font-bold shadow-2xs'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Scraped Notices List */}
+            <div className="space-y-2.5 max-h-[530px] overflow-y-auto pr-1">
+              {activities
+                .filter((act) => filterCategory === 'ALL' || act.category === filterCategory)
+                .map((act) => {
+                  const isHigh = act.riskLevel === 'HIGH';
+                  const isMod = act.riskLevel === 'MODERATE';
+
+                  return (
+                    <div
+                      key={act.id}
+                      className={`p-3 rounded-2xl border transition duration-200 shadow-2xs space-y-2 ${
+                        isHigh
+                          ? 'bg-rose-50/60 border-rose-200 hover:border-rose-300'
+                          : isMod
+                          ? 'bg-amber-50/40 border-amber-200 hover:border-amber-300'
+                          : 'bg-slate-50/80 border-slate-200/80 hover:border-slate-300'
+                      }`}
+                    >
+                      {/* Top Row: Category tag, Distance & Risk */}
+                      <div className="flex items-center justify-between text-[10px] font-mono">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="font-bold text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200/80 shadow-2xs flex items-center space-x-1">
+                            {act.category === 'Blasting' && <Flame className="w-3 h-3 text-rose-500" />}
+                            {act.category === 'Heavy Transport' && <Truck className="w-3 h-3 text-amber-500" />}
+                            {act.category === 'Drilling' && <Compass className="w-3 h-3 text-blue-500" />}
+                            {act.category === 'Excavation' && <MapPin className="w-3 h-3 text-emerald-500" />}
+                            <span>{act.category}</span>
+                          </span>
+                          <span className="text-slate-500 font-semibold">
+                            {act.distanceKm} km {act.direction}
+                          </span>
+                        </div>
+
+                        <span
+                          className={`px-2 py-0.2 rounded-full font-bold uppercase tracking-wider ${
+                            isHigh
+                              ? 'bg-rose-600 text-white animate-pulse'
+                              : isMod
+                              ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                              : 'bg-emerald-100 text-emerald-800'
+                          }`}
+                        >
+                          {act.status}
+                        </span>
+                      </div>
+
+                      {/* Title & Company */}
+                      <div>
+                        <div className="font-bold text-xs text-slate-900 leading-snug font-sans">
+                          {act.title}
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-mono flex items-center justify-between mt-0.5">
+                          <span>{act.company}</span>
+                          <span className="text-slate-400">{act.coordinates}</span>
+                        </div>
+                      </div>
+
+                      {/* Safety Impact Description */}
+                      <p className="text-[11px] text-slate-600 font-sans leading-relaxed bg-white/70 p-2 rounded-xl border border-slate-200/50">
+                        {act.impactDescription}
+                      </p>
+
+                      {/* Source & Timestamp Footer */}
+                      <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 pt-1 border-t border-slate-200/40">
+                        <span className="flex items-center space-x-1 truncate max-w-[200px]" title={act.source}>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                          <span className="truncate">{act.source}</span>
+                        </span>
+                        <span className="text-slate-500 font-medium shrink-0">{act.timestamp}</span>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           </div>
         </div>
