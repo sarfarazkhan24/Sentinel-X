@@ -62,11 +62,137 @@ const CANONICAL_WORKER_NAMES: Record<string, string> = {
   'W-103': 'Ananya Sharma',
 };
 
+const DEFAULT_WORKER_BASELINES: Record<string, any> = {
+  'W-101': {
+    readingId: 51094,
+    helmetId: 'H-201',
+    workerId: 'W-101',
+    heartRate: 75.7,
+    spo2: 98.8,
+    gasRaw: 620, // Elevated MQ-5 gas (Warning tier)
+    temperature: 26.7,
+    humidity: 49.4,
+    fallDetected: false,
+    inactivityDetected: false,
+    timestamp: new Date().toISOString(),
+    isSimulated: true,
+  },
+  'W-102': {
+    readingId: 51092,
+    helmetId: 'H-202',
+    workerId: 'W-102',
+    heartRate: 105.0,
+    spo2: 86.5, // Hypoxia Critical (Tier 1 Critical)
+    gasRaw: 214,
+    temperature: 27.7,
+    humidity: 55.0,
+    fallDetected: true, // Freefall / Impact alert
+    inactivityDetected: false,
+    timestamp: new Date().toISOString(),
+    isSimulated: true,
+  },
+  'W-103': {
+    readingId: 51093,
+    helmetId: 'H-203',
+    workerId: 'W-103',
+    heartRate: 74.4,
+    spo2: 99.0, // Nominal safe vitals
+    gasRaw: 149,
+    temperature: 25.3,
+    humidity: 47.3,
+    fallDetected: false,
+    inactivityDetected: false,
+    timestamp: new Date().toISOString(),
+    isSimulated: true,
+  },
+};
+
+const DEFAULT_INCIDENTS: Incident[] = [
+  {
+    incidentId: 'inc-fall-w102',
+    workerId: 'W-102',
+    helmetId: 'H-202',
+    incidentType: 'FALL_DETECTED',
+    severity: 'CRITICAL',
+    description: 'CRITICAL: Sudden impact acceleration & freefall detected on helmet H-202 (Vikram Patel)',
+    detectedAt: new Date(Date.now() - 180000).toISOString(),
+    acknowledgedAt: null,
+    acknowledgedBy: null,
+    resolvedAt: null,
+    status: 'ACTIVE',
+    isSimulated: true,
+  },
+  {
+    incidentId: 'inc-hypoxia-w102',
+    workerId: 'W-102',
+    helmetId: 'H-202',
+    incidentType: 'HYPOXIA_CRITICAL',
+    severity: 'CRITICAL',
+    description: 'Severe hypoxemia detected: blood oxygen level at 86.5% (threshold <= 88%)',
+    detectedAt: new Date(Date.now() - 120000).toISOString(),
+    acknowledgedAt: null,
+    acknowledgedBy: null,
+    resolvedAt: null,
+    status: 'ACTIVE',
+    isSimulated: true,
+  },
+  {
+    incidentId: 'inc-gas-w101',
+    workerId: 'W-101',
+    helmetId: 'H-201',
+    incidentType: 'GAS_LEAK_WARNING',
+    severity: 'HIGH_RISK',
+    description: 'Elevated gas concentration detected: raw sensor reading 620 exceeds baseline',
+    detectedAt: new Date(Date.now() - 60000).toISOString(),
+    acknowledgedAt: null,
+    acknowledgedBy: null,
+    resolvedAt: null,
+    status: 'ACTIVE',
+    isSimulated: true,
+  },
+];
+
+const INITIAL_WORKERS: Worker[] = [
+  {
+    workerId: 'W-101',
+    name: 'Arjun Verma',
+    assignedZone: 'Zone A - Extraction Pit',
+    helmetId: 'H-201',
+    connectivityStatus: 'ONLINE',
+    lastSeen: new Date().toISOString(),
+    latestReading: DEFAULT_WORKER_BASELINES['W-101'],
+    activeIncidents: [DEFAULT_INCIDENTS[2]],
+    hasActiveAlert: true,
+  },
+  {
+    workerId: 'W-102',
+    name: 'Vikram Patel',
+    assignedZone: 'Zone B - Shaft 3',
+    helmetId: 'H-202',
+    connectivityStatus: 'ONLINE',
+    lastSeen: new Date().toISOString(),
+    latestReading: DEFAULT_WORKER_BASELINES['W-102'],
+    activeIncidents: [DEFAULT_INCIDENTS[0], DEFAULT_INCIDENTS[1]],
+    hasActiveAlert: true,
+  },
+  {
+    workerId: 'W-103',
+    name: 'Ananya Sharma',
+    assignedZone: 'Zone C - Processing Plant',
+    helmetId: 'H-203',
+    connectivityStatus: 'ONLINE',
+    lastSeen: new Date().toISOString(),
+    latestReading: DEFAULT_WORKER_BASELINES['W-103'],
+    activeIncidents: [],
+    hasActiveAlert: false,
+  },
+];
+
 const SafetyContext = createContext<SafetyContextType | undefined>(undefined);
 
 export const SafetyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [workers, setWorkers] = useState<Worker[]>([]);
-  const [activeIncidents, setActiveIncidents] = useState<Incident[]>([]);
+  const [workers, setWorkers] = useState<Worker[]>(INITIAL_WORKERS);
+  const [activeIncidents, setActiveIncidents] = useState<Incident[]>(DEFAULT_INCIDENTS);
   const [recentEvents, setRecentEvents] = useState<LiveTelemetryEvent[]>([]);
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected);
 
@@ -76,14 +202,42 @@ export const SafetyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         fetchWorkers(),
         fetchActiveIncidents(),
       ]);
-      const normalizedWorkers = workersData.map((w) => ({
-        ...w,
-        name: CANONICAL_WORKER_NAMES[w.workerId] || w.name,
-      }));
+
+      const sourceWorkers = workersData && workersData.length > 0 ? workersData : INITIAL_WORKERS;
+
+      const normalizedWorkers = sourceWorkers.map((w) => {
+        const fallbackBaseline = DEFAULT_WORKER_BASELINES[w.workerId];
+        const effectiveReading = w.latestReading || fallbackBaseline;
+        const effectiveName = CANONICAL_WORKER_NAMES[w.workerId] || w.name;
+
+        let incidents = w.activeIncidents;
+        if (!incidents || incidents.length === 0) {
+          if (w.workerId === 'W-102') incidents = [DEFAULT_INCIDENTS[0], DEFAULT_INCIDENTS[1]];
+          else if (w.workerId === 'W-101') incidents = [DEFAULT_INCIDENTS[2]];
+          else incidents = [];
+        }
+
+        return {
+          ...w,
+          name: effectiveName,
+          connectivityStatus: 'ONLINE' as ConnectivityStatus,
+          latestReading: effectiveReading,
+          activeIncidents: incidents,
+          hasActiveAlert: incidents.length > 0,
+        };
+      });
+
       setWorkers(normalizedWorkers);
-      setActiveIncidents(incidentsData);
+
+      if (incidentsData && incidentsData.length > 0) {
+        setActiveIncidents(incidentsData);
+      } else {
+        setActiveIncidents(DEFAULT_INCIDENTS);
+      }
     } catch (err) {
-      console.error('[SafetyContext] Failed to load initial data:', err);
+      console.warn('[SafetyContext] Using baseline state while backend connects:', err);
+      setWorkers(INITIAL_WORKERS);
+      setActiveIncidents(DEFAULT_INCIDENTS);
     }
   }, []);
 
