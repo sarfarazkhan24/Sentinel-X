@@ -8,7 +8,6 @@ import {
   HardHat,
   Truck,
   Box,
-  FileText,
   Bell,
   Activity,
   Heart,
@@ -19,11 +18,16 @@ import {
   Flame,
   MapPin,
   Compass,
+  Radio,
+  Thermometer,
+  ArrowRight,
 } from 'lucide-react';
 
 import { useSafety } from '../context/SafetyContext';
 import { SourceBadge } from '../components/common/SourceBadge';
+import { SeverityBadge } from '../components/common/SeverityBadge';
 import { fetchNearbyActivities, NearbyMiningActivity } from '../services/api';
+import { Worker } from '../types';
 
 interface Props {
   onSelectWorker: (workerId: string) => void;
@@ -33,12 +37,19 @@ interface Props {
 export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency }) => {
   const {
     workers,
+    activeIncidents,
+    recentEvents,
     onlineCount,
     offlineCount,
+    criticalAlertCount,
+    isConnected,
   } = useSafety();
 
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
+
+  // Right Panel Tabs: Regional Scraper Radar vs Live Telemetry Packet Stream
+  const [rightPanelTab, setRightPanelTab] = useState<'scraper' | 'telemetry'>('scraper');
 
   // Regional Mining & Heavy Construction Scraper Feed State
   const [activities, setActivities] = useState<NearbyMiningActivity[]>([]);
@@ -66,10 +77,250 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
     return () => clearInterval(interval);
   }, [loadScraperData]);
 
+  // Compute average pit atmosphere gas (MQ-5)
+  const readingsWithGas = workers
+    .map((w) => w.latestReading?.gasRaw)
+    .filter((g): g is number => typeof g === 'number');
+  const avgGas = readingsWithGas.length > 0
+    ? Math.round(readingsWithGas.reduce((a, b) => a + b, 0) / readingsWithGas.length)
+    : 168;
+
   // Map 3 workers to specific mine sectors
   const worker1 = workers.find((w) => w.workerId === 'W-101') || workers[0];
   const worker2 = workers.find((w) => w.workerId === 'W-102') || workers[1];
   const worker3 = workers.find((w) => w.workerId === 'W-103') || workers[2];
+
+  // Helper to render high-fidelity, industrial-themed worker safety cards
+  const renderWorkerSafetyCard = (
+    worker: Worker | undefined,
+    defaultName: string,
+    defaultHelmet: string,
+    entranceZone: string,
+    sectorCode: string
+  ) => {
+    const r = worker?.latestReading;
+    const isOnline = worker?.connectivityStatus === 'ONLINE';
+    const hasAlert = worker?.hasActiveAlert || worker?.riskLevel === 'CRITICAL';
+    const hr = r?.heartRate;
+    const spo2 = r?.spo2;
+    const gas = r?.gasRaw;
+    const temp = r?.temperature;
+
+    const hrAlert = hr && (hr > 120 || hr < 50);
+    const spo2Alert = spo2 && spo2 < 92;
+    const gasAlert = gas && gas > 650;
+
+    return (
+      <div
+        key={worker?.workerId || defaultHelmet}
+        onClick={() => worker && onSelectWorker(worker.workerId)}
+        className={`group cursor-pointer bg-white rounded-[22px] p-4 border transition duration-200 relative overflow-hidden shadow-xs hover:shadow-md ${
+          hasAlert
+            ? 'border-rose-300 ring-1 ring-rose-200/80'
+            : 'border-slate-200/90 hover:border-slate-300'
+        }`}
+      >
+        {/* Top Row: Status badge, Sector tag & Helmet ID */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-1.5">
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase shadow-2xs flex items-center space-x-1 ${
+                hasAlert
+                  ? 'bg-rose-500 text-white animate-pulse'
+                  : isOnline
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-slate-200 text-slate-700'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  hasAlert || isOnline ? 'bg-white' : 'bg-slate-400'
+                }`}
+              />
+              <span>{hasAlert ? 'ALERT' : isOnline ? 'ONLINE' : 'STANDBY'}</span>
+            </span>
+
+            <span className="font-mono text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold border border-slate-200/70">
+              Sector {sectorCode}
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-1.5">
+            <span className="font-mono text-xs font-bold text-slate-700 tracking-wider">
+              {worker?.helmetId || defaultHelmet}
+            </span>
+          </div>
+        </div>
+
+        {/* Worker Name & Zone Subtitle */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between gap-1">
+            <div className="font-bold text-slate-900 text-base leading-snug group-hover:text-amber-600 transition truncate">
+              {worker?.name || defaultName}
+            </div>
+            {r && <SourceBadge isSimulated={r.isSimulated} />}
+          </div>
+          <div className="text-xs text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
+            <span>{worker?.workerId}</span>
+            <span>&bull;</span>
+            <span className="text-slate-600 font-medium truncate">
+              {worker?.assignedZone || entranceZone}
+            </span>
+          </div>
+        </div>
+
+        {/* 2x2 Telemetry Metric Matrix */}
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          {/* Heart Rate */}
+          <div
+            className={`p-2 rounded-xl border transition ${
+              hrAlert ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200/80'
+            }`}
+          >
+            <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider flex items-center space-x-1">
+              <Heart
+                className={`w-3 h-3 ${
+                  hrAlert ? 'text-rose-500 animate-pulse' : 'text-slate-400'
+                }`}
+              />
+              <span>Heart Rate</span>
+            </div>
+            <div className="flex items-baseline space-x-1 mt-0.5">
+              <span
+                className={`text-base font-extrabold font-sans ${
+                  hrAlert ? 'text-rose-600' : 'text-slate-900'
+                }`}
+              >
+                {hr ? Math.round(hr) : '--'}
+              </span>
+              <span className="text-[10px] font-mono text-slate-400">bpm</span>
+            </div>
+          </div>
+
+          {/* SpO2 */}
+          <div
+            className={`p-2 rounded-xl border transition ${
+              spo2Alert ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200/80'
+            }`}
+          >
+            <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider flex items-center space-x-1">
+              <Activity
+                className={`w-3 h-3 ${
+                  spo2Alert ? 'text-rose-500 animate-pulse' : 'text-cyan-600'
+                }`}
+              />
+              <span>Blood SpO2</span>
+            </div>
+            <div className="flex items-baseline space-x-1 mt-0.5">
+              <span
+                className={`text-base font-extrabold font-sans ${
+                  spo2Alert ? 'text-rose-600' : 'text-slate-900'
+                }`}
+              >
+                {spo2 ? spo2.toFixed(1) : '--'}
+              </span>
+              <span className="text-[10px] font-mono text-slate-400">%</span>
+            </div>
+          </div>
+
+          {/* Gas Raw */}
+          <div
+            className={`p-2 rounded-xl border transition ${
+              gasAlert ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200/80'
+            }`}
+          >
+            <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider flex items-center space-x-1">
+              <Wind
+                className={`w-3 h-3 ${
+                  gasAlert ? 'text-amber-500' : 'text-slate-400'
+                }`}
+              />
+              <span>Gas (MQ-5)</span>
+            </div>
+            <div className="flex items-baseline space-x-1 mt-0.5">
+              <span
+                className={`text-base font-extrabold font-sans ${
+                  gasAlert ? 'text-amber-600' : 'text-slate-900'
+                }`}
+              >
+                {gas ? Math.round(gas) : '--'}
+              </span>
+              <span className="text-[10px] font-mono text-slate-400">ppm</span>
+            </div>
+          </div>
+
+          {/* Ambient Temp */}
+          <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+            <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider flex items-center space-x-1">
+              <Thermometer className="w-3 h-3 text-orange-500" />
+              <span>Ambient Temp</span>
+            </div>
+            <div className="flex items-baseline space-x-1 mt-0.5">
+              <span className="text-base font-extrabold font-sans text-slate-900">
+                {temp ? `${temp.toFixed(1)}` : '--'}
+              </span>
+              <span className="text-[10px] font-mono text-slate-400">°C</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Kinematic Motion Check */}
+        <div className="flex items-center justify-between text-[11px] font-mono bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200/70 mb-3">
+          <span className="text-slate-500">Motion Status:</span>
+          <span
+            className={`font-semibold ${
+              r?.fallDetected
+                ? 'text-rose-600 animate-pulse font-bold'
+                : r?.inactivityDetected
+                ? 'text-amber-600 font-bold'
+                : 'text-emerald-700'
+            }`}
+          >
+            {r?.fallDetected
+              ? '⚠ FALL DETECTED'
+              : r?.inactivityDetected
+              ? '⚠ INACTIVITY'
+              : '✓ Normal Motion'}
+          </span>
+        </div>
+
+        {/* Card Footer: Zone and Action links */}
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+          <div className="flex items-center space-x-1 text-slate-600 font-medium">
+            <MapPin className="w-3 h-3 text-slate-400" />
+            <span className="truncate">{entranceZone}</span>
+          </div>
+
+          <div className="flex items-center space-x-2 text-slate-400">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                worker && onSelectWorker(worker.workerId);
+              }}
+              className="flex items-center space-x-1 text-[11px] font-mono text-slate-600 hover:text-amber-600 font-semibold transition"
+              title="View analytics and telemetry history"
+            >
+              <span>Telemetry</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onGoToEmergency();
+              }}
+              className="p-1 rounded hover:bg-slate-100 hover:text-slate-700 transition relative"
+              title="Alert status"
+            >
+              <Bell className="w-3.5 h-3.5" />
+              {hasAlert && (
+                <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -150,292 +401,108 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
         </div>
       </section>
 
-      {/* 2. MAIN 3-COLUMN INDUSTRIAL COMMAND GRID */}
+      {/* 2. EXECUTIVE INDUSTRIAL SAFETY KPI STRIP */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Card 1: Active Personnel */}
+        <div className="bg-white/85 backdrop-blur rounded-[20px] p-3.5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-mono text-slate-400 font-semibold uppercase tracking-wider">
+              Active Personnel
+            </div>
+            <div className="text-xl font-extrabold text-slate-900 tracking-tight font-sans mt-0.5">
+              {workers.length} <span className="text-xs font-normal text-slate-500 font-mono">Monitored</span>
+            </div>
+            <div className="text-[10px] text-emerald-600 font-medium flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>{onlineCount} Online &bull; {offlineCount} Offline</span>
+            </div>
+          </div>
+          <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-700 shadow-2xs">
+            <HardHat className="w-4 h-4 text-slate-700" />
+          </div>
+        </div>
+
+        {/* Card 2: MQTT Telemetry Stream */}
+        <div className="bg-white/85 backdrop-blur rounded-[20px] p-3.5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-mono text-slate-400 font-semibold uppercase tracking-wider">
+              Telemetry Stream
+            </div>
+            <div className="text-xl font-extrabold text-slate-900 tracking-tight font-sans mt-0.5">
+              {isConnected ? '100% Active' : 'Disconnected'}
+            </div>
+            <div className="text-[10px] text-slate-500 font-mono mt-0.5 flex items-center gap-1">
+              <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+              <span>QoS 1 &bull; Real-time MQTT</span>
+            </div>
+          </div>
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-700 shadow-2xs">
+            <Radio className="w-4 h-4 text-emerald-600" />
+          </div>
+        </div>
+
+        {/* Card 3: Pit Atmosphere Gas */}
+        <div className="bg-white/85 backdrop-blur rounded-[20px] p-3.5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-mono text-slate-400 font-semibold uppercase tracking-wider">
+              Pit Atmosphere
+            </div>
+            <div className="text-xl font-extrabold text-slate-900 tracking-tight font-sans mt-0.5">
+              {avgGas} <span className="text-xs font-normal text-slate-500 font-mono">ppm (MQ-5)</span>
+            </div>
+            <div className="text-[10px] font-medium flex items-center gap-1 mt-0.5 text-emerald-600">
+              <span>{avgGas > 600 ? '⚠ Elevated Gas Warning' : '✓ Normal Safe Baseline (<600)'}</span>
+            </div>
+          </div>
+          <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shadow-2xs ${
+            avgGas > 600 ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-slate-100 border-slate-200/80 text-slate-700'
+          }`}>
+            <Wind className="w-4 h-4 text-amber-600" />
+          </div>
+        </div>
+
+        {/* Card 4: Incident Triage */}
+        <div
+          onClick={onGoToEmergency}
+          className="cursor-pointer bg-white/85 backdrop-blur rounded-[20px] p-3.5 border border-slate-200/80 shadow-xs hover:border-slate-300 transition flex items-center justify-between group"
+        >
+          <div>
+            <div className="text-[10px] font-mono text-slate-400 font-semibold uppercase tracking-wider">
+              Safety Triage
+            </div>
+            <div className={`text-xl font-extrabold tracking-tight font-sans mt-0.5 ${
+              criticalAlertCount > 0 ? 'text-rose-600 animate-pulse' : 'text-slate-900'
+            }`}>
+              {criticalAlertCount > 0 ? `${criticalAlertCount} CRITICAL` : `${activeIncidents.length} Pending`}
+            </div>
+            <div className="text-[10px] text-slate-500 font-mono mt-0.5 group-hover:text-amber-600 transition flex items-center gap-1">
+              <span>Emergency Center &rarr;</span>
+            </div>
+          </div>
+          <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shadow-2xs ${
+            criticalAlertCount > 0
+              ? 'bg-rose-50 border-rose-200 text-rose-600 animate-bounce'
+              : 'bg-slate-100 border-slate-200/80 text-slate-700'
+          }`}>
+            <AlertTriangle className="w-4 h-4" />
+          </div>
+        </div>
+      </section>
+
+      {/* 3. MAIN 3-COLUMN INDUSTRIAL COMMAND GRID */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
         {/* ========================================================= */}
         {/* LEFT COLUMN: Worker Cards Stack (3 cols on xl)             */}
         {/* ========================================================= */}
         <div className="xl:col-span-3 space-y-3.5">
-          {/* Card 1: Worker 1 (Alex Carter / H-201) */}
-          <div
-            onClick={() => worker1 && onSelectWorker(worker1.workerId)}
-            className="group cursor-pointer bg-white rounded-[22px] p-4 border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition duration-200 relative overflow-hidden"
-          >
-            {/* Top Row: Status pill & Helmet ID */}
-            <div className="flex items-center justify-between mb-3">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-emerald-500 text-white shadow-2xs">
-                IN PROCESS
-              </span>
-              <span className="font-mono text-xs font-bold text-slate-500 tracking-wider">
-                {worker1?.helmetId || 'A001XX92'}
-              </span>
-            </div>
+          {/* Worker 1: Alex Carter (W-101) */}
+          {renderWorkerSafetyCard(worker1, 'Alex Carter', 'H-201', 'Entrance B — Extraction Pit', 'BA')}
 
-            {/* Worker Name & Zone Subtitle */}
-            <div className="mb-3">
-              <div className="font-bold text-slate-900 text-base leading-snug group-hover:text-amber-600 transition">
-                {worker1?.name || 'Alex Carter'}
-              </div>
-              <div className="text-xs text-slate-400 font-mono flex items-center gap-1.5">
-                <span>{worker1?.workerId}</span>
-                <span>&bull;</span>
-                <span className="text-slate-600 font-medium">{worker1?.assignedZone || 'Entrance B'}</span>
-                {worker1?.latestReading && (
-                  <SourceBadge isSimulated={worker1.latestReading.isSimulated} />
-                )}
-              </div>
-            </div>
+          {/* Worker 2: Marcus Vance (W-102) */}
+          {renderWorkerSafetyCard(worker2, 'Marcus Vance', 'H-202', 'Entrance C — Shaft 3', 'BB')}
 
-            {/* Primary Metrics (Mined / Plan & Engaged / Wagons) */}
-            <div className="grid grid-cols-2 gap-y-2.5 gap-x-3 mb-4">
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide flex items-center space-x-1">
-                  <span>Mined</span>
-                  <span className="text-[9px] font-mono text-slate-400">mt</span>
-                </div>
-                <div className="text-xl font-extrabold text-slate-900 tracking-tight font-sans">
-                  49,976
-                </div>
-              </div>
-
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide flex items-center space-x-1">
-                  <span>Plan</span>
-                  <span className="text-[9px] font-mono text-slate-400">mt</span>
-                </div>
-                <div className="text-xl font-extrabold text-slate-900 tracking-tight font-sans">
-                  75,000
-                </div>
-              </div>
-
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide">
-                  Engaged
-                </div>
-                <div className="flex items-center space-x-1.5 text-base font-bold text-slate-800">
-                  <span>318</span>
-                  <HardHat className="w-3.5 h-3.5 text-slate-600" />
-                </div>
-              </div>
-
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide">
-                  Equipment
-                </div>
-                <div className="flex items-center space-x-1.5 text-base font-bold text-slate-800">
-                  <span>296</span>
-                  <Truck className="w-3.5 h-3.5 text-slate-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Real-time Telemetry Mini-pill Row */}
-            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 mb-3 flex items-center justify-between text-xs font-mono">
-              <div className="flex items-center space-x-1 text-slate-700">
-                <Heart className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
-                <span className="font-bold">{worker1?.latestReading?.heartRate ?? 74}</span>
-                <span className="text-[10px] text-slate-400">bpm</span>
-              </div>
-              <div className="flex items-center space-x-1 text-slate-700">
-                <Activity className="w-3.5 h-3.5 text-cyan-600" />
-                <span className="font-bold">{worker1?.latestReading?.spo2 ?? 98}%</span>
-              </div>
-              <div className="flex items-center space-x-1 text-slate-700">
-                <Wind className="w-3.5 h-3.5 text-amber-500" />
-                <span className="font-bold">{worker1?.latestReading?.gasRaw ?? 142}</span>
-              </div>
-            </div>
-
-            {/* Gradient Loading Progress Bar (Cyan -> Yellow -> Orange -> Red) */}
-            <div className="space-y-1 mb-3">
-              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-700">
-                <span>Loading 65%</span>
-                <span className="font-mono text-slate-900 font-bold">49,976</span>
-              </div>
-              <div className="relative h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-amber-400 to-rose-500"
-                  style={{ width: '65%' }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-[9px] font-mono text-slate-400">
-                <span>0 mt</span>
-                <span>75K mt</span>
-              </div>
-            </div>
-
-            {/* Card Footer: Zone Dropdown & Action Icons */}
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-1 text-slate-700 font-medium hover:text-slate-900">
-                <span>Entrance B</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-              </div>
-
-              <div className="flex items-center space-x-2 text-slate-400">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    worker1 && onSelectWorker(worker1.workerId);
-                  }}
-                  className="p-1 rounded hover:bg-slate-100 hover:text-slate-700 transition"
-                  title="View worker logs"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onGoToEmergency();
-                  }}
-                  className="p-1 rounded hover:bg-slate-100 hover:text-slate-700 transition relative"
-                  title="Alert status"
-                >
-                  <Bell className="w-3.5 h-3.5" />
-                  {worker1?.hasActiveAlert && (
-                    <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Worker 2 (Marcus Vance / H-202) */}
-          <div
-            onClick={() => worker2 && onSelectWorker(worker2.workerId)}
-            className="group cursor-pointer bg-white rounded-[22px] p-4 border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition duration-200"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-slate-200 text-slate-700">
-                COMPLETED
-              </span>
-              <span className="font-mono text-xs font-bold text-slate-500 tracking-wider">
-                {worker2?.helmetId || 'B825BK82'}
-              </span>
-            </div>
-
-            <div className="mb-3">
-              <div className="font-bold text-slate-900 text-base leading-snug group-hover:text-amber-600 transition">
-                {worker2?.name || 'Marcus Vance'}
-              </div>
-              <div className="text-xs text-slate-400 font-mono flex items-center gap-1.5">
-                <span>{worker2?.workerId}</span>
-                <span>&bull;</span>
-                <span className="text-slate-600 font-medium">{worker2?.assignedZone || 'Entrance C'}</span>
-                {worker2?.latestReading && (
-                  <SourceBadge isSimulated={worker2.latestReading.isSimulated} />
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-y-2.5 gap-x-3 mb-3">
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide">Mined mt</div>
-                <div className="text-xl font-extrabold text-slate-900 tracking-tight font-sans">
-                  54,132
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide">Plan mt</div>
-                <div className="text-xl font-extrabold text-slate-900 tracking-tight font-sans">
-                  54,000
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide">Engaged</div>
-                <div className="flex items-center space-x-1.5 text-base font-bold text-slate-800">
-                  <span>243</span>
-                  <HardHat className="w-3.5 h-3.5 text-slate-600" />
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide">Equipment</div>
-                <div className="flex items-center space-x-1.5 text-base font-bold text-slate-800">
-                  <span>278</span>
-                  <Truck className="w-3.5 h-3.5 text-slate-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-1 text-slate-700 font-medium">
-                <span>Entrance C</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-              </div>
-              <div className="flex items-center space-x-2 text-slate-400">
-                <FileText className="w-3.5 h-3.5 hover:text-slate-700" />
-                <Bell className="w-3.5 h-3.5 hover:text-slate-700" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3: Worker 3 (Sarah Chen / H-203) */}
-          <div
-            onClick={() => worker3 && onSelectWorker(worker3.workerId)}
-            className="group cursor-pointer bg-white rounded-[22px] p-4 border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition duration-200"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-slate-200 text-slate-700">
-                COMPLETED
-              </span>
-              <span className="font-mono text-xs font-bold text-slate-500 tracking-wider">
-                {worker3?.helmetId || 'B122BK92'}
-              </span>
-            </div>
-
-            <div className="mb-3">
-              <div className="font-bold text-slate-900 text-base leading-snug group-hover:text-amber-600 transition">
-                {worker3?.name || 'Sarah Chen'}
-              </div>
-              <div className="text-xs text-slate-400 font-mono flex items-center gap-1.5">
-                <span>{worker3?.workerId}</span>
-                <span>&bull;</span>
-                <span className="text-slate-600 font-medium">{worker3?.assignedZone || 'Entrance D'}</span>
-                {worker3?.latestReading && (
-                  <SourceBadge isSimulated={worker3.latestReading.isSimulated} />
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-y-2.5 gap-x-3 mb-3">
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide">Mined mt</div>
-                <div className="text-xl font-extrabold text-slate-900 tracking-tight font-sans">
-                  47,114
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide">Plan mt</div>
-                <div className="text-xl font-extrabold text-slate-900 tracking-tight font-sans">
-                  47,000
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide">Engaged</div>
-                <div className="flex items-center space-x-1.5 text-base font-bold text-slate-800">
-                  <span>113</span>
-                  <HardHat className="w-3.5 h-3.5 text-slate-600" />
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-semibold tracking-wide">Equipment</div>
-                <div className="flex items-center space-x-1.5 text-base font-bold text-slate-800">
-                  <span>149</span>
-                  <Truck className="w-3.5 h-3.5 text-slate-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-1 text-slate-700 font-medium">
-                <span>Entrance D</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-              </div>
-              <div className="flex items-center space-x-2 text-slate-400">
-                <FileText className="w-3.5 h-3.5 hover:text-slate-700" />
-                <Bell className="w-3.5 h-3.5 hover:text-slate-700" />
-              </div>
-            </div>
-          </div>
+          {/* Worker 3: Sarah Chen / Elena Rostova (W-103) */}
+          {renderWorkerSafetyCard(worker3, 'Sarah Chen', 'H-203', 'Entrance D — Processing Plant', 'DA')}
         </div>
 
         {/* ========================================================= */}
@@ -550,7 +617,11 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-bold text-slate-900 text-sm flex items-center gap-1.5">
                       <span>BA</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className={`w-2 h-2 rounded-full ${
+                        worker1?.hasActiveAlert || worker1?.riskLevel === 'CRITICAL'
+                          ? 'bg-rose-500 animate-pulse'
+                          : 'bg-emerald-500 animate-pulse'
+                      }`} />
                     </span>
                     <span className="text-slate-400 text-xs">&bull;&bull;&bull;</span>
                   </div>
@@ -650,7 +721,11 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-bold text-slate-900 text-sm flex items-center gap-1.5">
                       <span>BB</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <span className={`w-2 h-2 rounded-full ${
+                        worker2?.hasActiveAlert || worker2?.riskLevel === 'CRITICAL'
+                          ? 'bg-rose-500 animate-pulse'
+                          : 'bg-emerald-500'
+                      }`} />
                     </span>
                     <span className="text-slate-400 text-xs">&bull;&bull;&bull;</span>
                   </div>
@@ -729,7 +804,11 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-bold text-slate-900 text-sm flex items-center gap-1.5">
                       <span>DA</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <span className={`w-2 h-2 rounded-full ${
+                        worker3?.hasActiveAlert || worker3?.riskLevel === 'CRITICAL'
+                          ? 'bg-rose-500 animate-pulse'
+                          : 'bg-emerald-500'
+                      }`} />
                     </span>
                     <span className="text-slate-400 text-xs">&bull;&bull;&bull;</span>
                   </div>
@@ -769,137 +848,237 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
         {/* ========================================================= */}
         <div className="xl:col-span-4 space-y-3.5">
           <div className="bg-white rounded-[24px] p-4.5 border border-slate-200/90 shadow-xs space-y-3">
-            {/* Header with Live Scraper Radar Icon & Refresh */}
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center space-x-2">
-                  <div className="p-1.5 rounded-lg bg-amber-500 text-white shadow-xs">
-                    <Radar className={`w-4 h-4 ${isScraping ? 'animate-spin' : ''}`} />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-900 font-sans leading-tight">
-                      Regional Activity Scraper
-                    </h2>
-                    <p className="text-[10px] font-mono text-slate-400">
-                      Nearby Mining &amp; Heavy Construction Feeds
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => loadScraperData()}
-                disabled={isScraping}
-                className="p-1.5 rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition shadow-2xs"
-                title="Re-scrape nearby activity notices"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isScraping ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-
-            {/* Scraper Status Bar */}
-            <div className="flex items-center justify-between text-[11px] font-mono bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5">
-              <span className="flex items-center space-x-1.5 text-slate-600">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Radius: &le; 10 km</span>
-              </span>
-              <span className="text-slate-400">
-                Sync: {lastScrapedTime}
-              </span>
-            </div>
-
-            {/* Category Filter Pills */}
-            <div className="flex items-center space-x-1 overflow-x-auto pb-1 text-[10px] font-mono">
-              {['ALL', 'Blasting', 'Heavy Transport', 'Drilling', 'Excavation'].map((cat) => (
+            {/* Header with Dual-Tab Segmented Switcher */}
+            <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+              <div className="flex items-center p-0.5 bg-slate-100 rounded-full border border-slate-200/80 shadow-2xs">
                 <button
-                  key={cat}
-                  onClick={() => setFilterCategory(cat)}
-                  className={`px-2.5 py-1 rounded-full whitespace-nowrap transition border ${
-                    filterCategory === cat
-                      ? 'bg-[#18191B] text-white border-[#18191B] font-bold shadow-2xs'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  onClick={() => setRightPanelTab('scraper')}
+                  className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${
+                    rightPanelTab === 'scraper'
+                      ? 'bg-[#18191B] text-white shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  {cat}
+                  <Radar className={`w-3.5 h-3.5 ${isScraping ? 'animate-spin' : ''}`} />
+                  <span>Regional Radar</span>
                 </button>
-              ))}
+                <button
+                  onClick={() => setRightPanelTab('telemetry')}
+                  className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${
+                    rightPanelTab === 'telemetry'
+                      ? 'bg-[#18191B] text-white shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Radio className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Live Ingestion</span>
+                  {recentEvents.length > 0 && (
+                    <span className="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono bg-emerald-500 text-white font-bold">
+                      {recentEvents.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {rightPanelTab === 'scraper' ? (
+                <button
+                  onClick={() => loadScraperData()}
+                  disabled={isScraping}
+                  className="p-1.5 rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition shadow-2xs"
+                  title="Re-scrape nearby activity notices"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isScraping ? 'animate-spin' : ''}`} />
+                </button>
+              ) : (
+                <div className="flex items-center space-x-1.5 text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>LIVE INGESTION</span>
+                </div>
+              )}
             </div>
 
-            {/* Scraped Notices List */}
-            <div className="space-y-2.5 max-h-[530px] overflow-y-auto pr-1">
-              {activities
-                .filter((act) => filterCategory === 'ALL' || act.category === filterCategory)
-                .map((act) => {
-                  const isHigh = act.riskLevel === 'HIGH';
-                  const isMod = act.riskLevel === 'MODERATE';
+            {/* TAB 1: REGIONAL ACTIVITY SCRAPER */}
+            {rightPanelTab === 'scraper' && (
+              <>
+                {/* Scraper Status Bar */}
+                <div className="flex items-center justify-between text-[11px] font-mono bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5">
+                  <span className="flex items-center space-x-1.5 text-slate-600">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Radius: &le; 10 km</span>
+                  </span>
+                  <span className="text-slate-400">
+                    Sync: {lastScrapedTime}
+                  </span>
+                </div>
 
-                  return (
-                    <div
-                      key={act.id}
-                      className={`p-3 rounded-2xl border transition duration-200 shadow-2xs space-y-2 ${
-                        isHigh
-                          ? 'bg-rose-50/60 border-rose-200 hover:border-rose-300'
-                          : isMod
-                          ? 'bg-amber-50/40 border-amber-200 hover:border-amber-300'
-                          : 'bg-slate-50/80 border-slate-200/80 hover:border-slate-300'
+                {/* Category Filter Pills */}
+                <div className="flex items-center space-x-1 overflow-x-auto pb-1 text-[10px] font-mono">
+                  {['ALL', 'Blasting', 'Heavy Transport', 'Drilling', 'Excavation'].map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setFilterCategory(cat)}
+                      className={`px-2.5 py-1 rounded-full whitespace-nowrap transition border ${
+                        filterCategory === cat
+                          ? 'bg-[#18191B] text-white border-[#18191B] font-bold shadow-2xs'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                       }`}
                     >
-                      {/* Top Row: Category tag, Distance & Risk */}
-                      <div className="flex items-center justify-between text-[10px] font-mono">
-                        <div className="flex items-center space-x-1.5">
-                          <span className="font-bold text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200/80 shadow-2xs flex items-center space-x-1">
-                            {act.category === 'Blasting' && <Flame className="w-3 h-3 text-rose-500" />}
-                            {act.category === 'Heavy Transport' && <Truck className="w-3 h-3 text-amber-500" />}
-                            {act.category === 'Drilling' && <Compass className="w-3 h-3 text-blue-500" />}
-                            {act.category === 'Excavation' && <MapPin className="w-3 h-3 text-emerald-500" />}
-                            <span>{act.category}</span>
-                          </span>
-                          <span className="text-slate-500 font-semibold">
-                            {act.distanceKm} km {act.direction}
-                          </span>
-                        </div>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
 
-                        <span
-                          className={`px-2 py-0.2 rounded-full font-bold uppercase tracking-wider ${
+                {/* Scraped Notices List */}
+                <div className="space-y-2.5 max-h-[530px] overflow-y-auto pr-1">
+                  {activities
+                    .filter((act) => filterCategory === 'ALL' || act.category === filterCategory)
+                    .map((act) => {
+                      const isHigh = act.riskLevel === 'HIGH';
+                      const isMod = act.riskLevel === 'MODERATE';
+
+                      return (
+                        <div
+                          key={act.id}
+                          className={`p-3 rounded-2xl border transition duration-200 shadow-2xs space-y-2 ${
                             isHigh
-                              ? 'bg-rose-600 text-white animate-pulse'
+                              ? 'bg-rose-50/60 border-rose-200 hover:border-rose-300'
                               : isMod
-                              ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                              : 'bg-emerald-100 text-emerald-800'
+                              ? 'bg-amber-50/40 border-amber-200 hover:border-amber-300'
+                              : 'bg-slate-50/80 border-slate-200/80 hover:border-slate-300'
                           }`}
                         >
-                          {act.status}
-                        </span>
-                      </div>
+                          {/* Top Row: Category tag, Distance & Risk */}
+                          <div className="flex items-center justify-between text-[10px] font-mono">
+                            <div className="flex items-center space-x-1.5">
+                              <span className="font-bold text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200/80 shadow-2xs flex items-center space-x-1">
+                                {act.category === 'Blasting' && <Flame className="w-3 h-3 text-rose-500" />}
+                                {act.category === 'Heavy Transport' && <Truck className="w-3 h-3 text-amber-500" />}
+                                {act.category === 'Drilling' && <Compass className="w-3 h-3 text-blue-500" />}
+                                {act.category === 'Excavation' && <MapPin className="w-3 h-3 text-emerald-500" />}
+                                <span>{act.category}</span>
+                              </span>
+                              <span className="text-slate-500 font-semibold">
+                                {act.distanceKm} km {act.direction}
+                              </span>
+                            </div>
 
-                      {/* Title & Company */}
-                      <div>
-                        <div className="font-bold text-xs text-slate-900 leading-snug font-sans">
-                          {act.title}
+                            <span
+                              className={`px-2 py-0.2 rounded-full font-bold uppercase tracking-wider ${
+                                isHigh
+                                  ? 'bg-rose-600 text-white animate-pulse'
+                                  : isMod
+                                  ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                  : 'bg-emerald-100 text-emerald-800'
+                              }`}
+                            >
+                              {act.status}
+                            </span>
+                          </div>
+
+                          {/* Title & Company */}
+                          <div>
+                            <div className="font-bold text-xs text-slate-900 leading-snug font-sans">
+                              {act.title}
+                            </div>
+                            <div className="text-[10px] text-slate-500 font-mono flex items-center justify-between mt-0.5">
+                              <span>{act.company}</span>
+                              <span className="text-slate-400">{act.coordinates}</span>
+                            </div>
+                          </div>
+
+                          {/* Safety Impact Description */}
+                          <p className="text-[11px] text-slate-600 font-sans leading-relaxed bg-white/70 p-2 rounded-xl border border-slate-200/50">
+                            {act.impactDescription}
+                          </p>
+
+                          {/* Source & Timestamp Footer */}
+                          <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 pt-1 border-t border-slate-200/40">
+                            <span className="flex items-center space-x-1 truncate max-w-[200px]" title={act.source}>
+                              <ExternalLink className="w-2.5 h-2.5" />
+                              <span className="truncate">{act.source}</span>
+                            </span>
+                            <span className="text-slate-500 font-medium shrink-0">{act.timestamp}</span>
+                          </div>
                         </div>
-                        <div className="text-[10px] text-slate-500 font-mono flex items-center justify-between mt-0.5">
-                          <span>{act.company}</span>
-                          <span className="text-slate-400">{act.coordinates}</span>
-                        </div>
-                      </div>
+                      );
+                    })}
+                </div>
+              </>
+            )}
 
-                      {/* Safety Impact Description */}
-                      <p className="text-[11px] text-slate-600 font-sans leading-relaxed bg-white/70 p-2 rounded-xl border border-slate-200/50">
-                        {act.impactDescription}
-                      </p>
+            {/* TAB 2: LIVE MQTT TELEMETRY INGESTION FEED */}
+            {rightPanelTab === 'telemetry' && (
+              <div className="space-y-3">
+                {/* Telemetry QoS Status Strip */}
+                <div className="flex items-center justify-between text-[11px] font-mono bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5">
+                  <span className="flex items-center space-x-1.5 text-slate-600">
+                    <Radio className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+                    <span>Topic: sentinelx/+/telemetry</span>
+                  </span>
+                  <span className="text-slate-400">
+                    {recentEvents.length} Packets Buffered
+                  </span>
+                </div>
 
-                      {/* Source & Timestamp Footer */}
-                      <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 pt-1 border-t border-slate-200/40">
-                        <span className="flex items-center space-x-1 truncate max-w-[200px]" title={act.source}>
-                          <ExternalLink className="w-2.5 h-2.5" />
-                          <span className="truncate">{act.source}</span>
-                        </span>
-                        <span className="text-slate-500 font-medium shrink-0">{act.timestamp}</span>
+                {/* Streaming List of MQTT Packets */}
+                <div className="space-y-2.5 max-h-[530px] overflow-y-auto pr-1">
+                  {recentEvents.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400 text-xs font-mono bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-6">
+                      <Radio className="w-6 h-6 mx-auto mb-2 text-slate-300 animate-pulse" />
+                      <div className="font-semibold text-slate-600">Awaiting Telemetry Packets</div>
+                      <div className="text-[11px] text-slate-400 mt-1">
+                        Listening on MQTT broker for incoming worker sensor frames...
                       </div>
                     </div>
-                  );
-                })}
-            </div>
+                  ) : (
+                    recentEvents.map((evt, idx) => (
+                      <div
+                        key={evt.readingId || idx}
+                        onClick={() => onSelectWorker(evt.workerId)}
+                        className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 transition duration-150 shadow-2xs space-y-2 text-xs cursor-pointer group"
+                      >
+                        {/* Top Line: Helmet ID, Source Badge, and Time */}
+                        <div className="flex items-center justify-between text-[10px] font-mono">
+                          <div className="flex items-center space-x-1.5">
+                            <span className="font-bold text-slate-800 bg-white px-2 py-0.5 rounded-md border border-slate-200/80 shadow-2xs">
+                              {evt.helmetId}
+                            </span>
+                            <SourceBadge isSimulated={evt.isSimulated} />
+                          </div>
+                          <span className="text-slate-400 font-medium">
+                            {new Date(evt.timestamp).toLocaleTimeString()}
+                          </span>
+                        </div>
+
+                        {/* Middle Line: Worker Name and Severity */}
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-900 text-xs group-hover:text-amber-600 transition">
+                            {evt.workerName || evt.workerId}
+                          </span>
+                          <SeverityBadge severity={evt.riskLevel} size="sm" />
+                        </div>
+
+                        {/* Bottom Line: Vitals pills */}
+                        <div className="grid grid-cols-3 gap-1 pt-1.5 border-t border-slate-200/60 text-[11px] font-mono">
+                          <div className="flex items-center space-x-1 text-slate-600">
+                            <Heart className="w-3 h-3 text-rose-500" />
+                            <span>{evt.vitals?.heartRate ? `${Math.round(evt.vitals.heartRate)} bpm` : '--'}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-slate-600">
+                            <Activity className="w-3 h-3 text-cyan-600" />
+                            <span>{evt.vitals?.spo2 ? `${evt.vitals.spo2}%` : '--'}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-slate-600">
+                            <Wind className="w-3 h-3 text-amber-500" />
+                            <span>{evt.environment?.gasRaw ? `${evt.environment.gasRaw}` : '--'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
