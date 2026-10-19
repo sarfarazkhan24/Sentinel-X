@@ -7,6 +7,7 @@ import { LiveMonitoringPage } from './pages/LiveMonitoringPage';
 import { WorkerDetailsPage } from './pages/WorkerDetailsPage';
 import { EmergencyPage } from './pages/EmergencyPage';
 import { IncidentHistoryPage } from './pages/IncidentHistoryPage';
+import { CommsPage } from './pages/CommsPage';
 
 import { SidebarIconRail } from './components/common/SidebarIconRail';
 
@@ -59,6 +60,8 @@ const AppContent: React.FC = () => {
           )}
 
           {activeTab === 'emergency' && <EmergencyPage />}
+
+          {activeTab === 'comms' && <CommsPage />}
 
           {activeTab === 'history' && <IncidentHistoryPage />}
         </main>

@@ -2,14 +2,10 @@ import React from 'react';
 import {
   HardHat,
   Heart,
-  Wind,
-  MapPin,
-  MessageSquare,
-  Thermometer,
+  Activity,
   ShieldAlert,
-  Compass,
-  Radio,
-  Scan,
+  MessageSquare,
+  FileText,
 } from 'lucide-react';
 
 interface Props {
@@ -18,40 +14,28 @@ interface Props {
 }
 
 export const SidebarIconRail: React.FC<Props> = ({ activeTab, setActiveTab }) => {
+  // Only distinct, functional views with zero redundant duplicate routes
   const items = [
-    { id: 'overview', icon: HardHat, label: 'Overview' },
-    { id: 'monitoring', icon: Heart, label: 'Vitals' },
-    { id: 'workers', icon: Wind, label: 'Ecology' },
-    { id: 'map', icon: MapPin, label: 'Spatial Sectors' },
-    { id: 'telemetry_grid', icon: Compass, label: 'Tactical Grid' },
-    { id: 'emergency', icon: ShieldAlert, label: 'Safety' },
-    { id: 'messages', icon: MessageSquare, label: 'Comms' },
-    { id: 'sensors', icon: Thermometer, label: 'Sensors' },
-    { id: 'history', icon: Scan, label: 'Audit Scan' },
-    { id: 'radio', icon: Radio, label: 'Radio Dispatch' },
+    { id: 'overview', icon: HardHat, label: 'Overview & Mine Map' },
+    { id: 'monitoring', icon: Heart, label: 'Live Biometrics' },
+    { id: 'workers', icon: Activity, label: 'Worker Telemetry & History' },
+    { id: 'emergency', icon: ShieldAlert, label: 'Emergency Triage' },
+    { id: 'comms', icon: MessageSquare, label: 'Tactical Radio & Comms' },
+    { id: 'history', icon: FileText, label: 'Audit Trail & Reports' },
   ];
 
   return (
     <aside className="hidden lg:flex flex-col items-center justify-between w-14 bg-white/80 backdrop-blur rounded-[26px] border border-slate-200/90 shadow-sm py-4 my-2 ml-4 self-stretch">
-      {/* Top Icons */}
+      {/* Navigation Icons */}
       <div className="flex flex-col items-center space-y-3 w-full">
-        {items.map((item, idx) => {
+        {items.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            activeTab === item.id ||
-            (item.id === 'telemetry_grid' && activeTab === 'overview') ||
-            (item.id === 'map' && activeTab === 'overview');
+          const isActive = activeTab === item.id;
 
           return (
             <button
-              key={item.id || idx}
-              onClick={() => {
-                if (['overview', 'monitoring', 'emergency', 'workers', 'history'].includes(item.id)) {
-                  setActiveTab(item.id);
-                } else {
-                  setActiveTab('overview');
-                }
-              }}
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
               title={item.label}
               className={`w-9 h-9 rounded-full flex items-center justify-center transition ${
                 isActive
@@ -65,7 +49,7 @@ export const SidebarIconRail: React.FC<Props> = ({ activeTab, setActiveTab }) =>
         })}
       </div>
 
-      {/* Bottom Colorful Circular Ring Badge */}
+      {/* Bottom Circular Status Ring */}
       <div className="pt-2">
         <div className="w-6 h-6 rounded-full p-[2px] bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-500 shadow-sm">
           <div className="w-full h-full rounded-full bg-white flex items-center justify-center">

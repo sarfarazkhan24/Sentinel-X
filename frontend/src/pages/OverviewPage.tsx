@@ -16,14 +16,12 @@ import {
   HardHat,
   Truck,
   Box,
-  Layers,
   FileText,
   Bell,
   Activity,
   Heart,
   Wind,
   Sliders,
-  Sparkles,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -67,7 +65,6 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
 
   const [selectedSection, setSelectedSection] = useState<'S9' | 'S10' | 'S11' | 'S12'>('S9');
   const [zoomLevel, setZoomLevel] = useState<number>(100);
-  const [activeTool, setActiveTool] = useState<'magnet' | 'marquee' | 'polygon'>('magnet');
   const [wagonsOpen, setWagonsOpen] = useState<boolean>(true);
   const [workersOpen, setWorkersOpen] = useState<boolean>(false);
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
@@ -106,32 +103,21 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
 
           {/* Continuous Timeline Ruler */}
           <div className="flex-1 overflow-x-auto py-1">
-            <div className="min-w-[700px] flex items-center justify-between text-[11px] font-mono text-slate-400 relative">
-              {/* Timeline marker items */}
+            <div className="min-w-[650px] flex items-center justify-between text-[11px] font-mono text-slate-400 relative">
               <div className="flex flex-col items-center">
-                <span className="text-slate-600 font-semibold">15K</span>
-                <span className="h-2 w-px bg-slate-300 mt-1" />
-              </div>
-
-              <div className="flex flex-col items-center">
-                <span>8:00</span>
+                <span>08:00</span>
                 <span className="h-2 w-px bg-slate-300 mt-1" />
               </div>
 
               {/* Active current time block with hatched pattern and bell */}
-              <div className="flex items-center px-4 py-1 rounded-md bg-slate-100 border border-slate-300/80 shadow-2xs relative">
+              <div className="flex items-center px-3.5 py-1 rounded-md bg-slate-100 border border-slate-300/80 shadow-2xs relative">
                 <div className="absolute inset-0 opacity-15 bg-[repeating-linear-gradient(45deg,#000_0,#000_2px,transparent_0,transparent_6px)] rounded-md" />
                 <Bell className="w-3 h-3 text-slate-700 mr-1.5 relative z-10" />
                 <span className="text-slate-900 font-bold text-[10px] relative z-10">08:45 SHIFT PEAK</span>
               </div>
 
               <div className="flex flex-col items-center">
-                <span>9:00</span>
-                <span className="h-2 w-px bg-slate-300 mt-1" />
-              </div>
-
-              <div className="flex flex-col items-center">
-                <span className="text-slate-600 font-semibold">30K</span>
+                <span>09:00</span>
                 <span className="h-2 w-px bg-slate-300 mt-1" />
               </div>
 
@@ -146,17 +132,17 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
               </div>
 
               <div className="flex flex-col items-center">
-                <span className="text-slate-600 font-semibold">45K</span>
-                <span className="h-2 w-px bg-slate-300 mt-1" />
-              </div>
-
-              <div className="flex flex-col items-center">
                 <span>12:00</span>
                 <span className="h-2 w-px bg-slate-300 mt-1" />
               </div>
 
               <div className="flex flex-col items-center">
-                <span>01:00</span>
+                <span>13:00</span>
+                <span className="h-2 w-px bg-slate-300 mt-1" />
+              </div>
+
+              <div className="flex flex-col items-center">
+                <span>14:00</span>
                 <span className="h-2 w-px bg-slate-300 mt-1" />
               </div>
 
@@ -461,43 +447,14 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
         <div className="xl:col-span-6 space-y-3">
           {/* Top Floating Controls Bar */}
           <div className="flex items-center justify-between">
-            {/* Tool selection buttons */}
-            <div className="flex items-center space-x-1.5">
-              <button
-                onClick={() => setActiveTool('magnet')}
-                className={`p-2 rounded-xl transition ${
-                  activeTool === 'magnet'
-                    ? 'bg-blue-500 text-white shadow-sm'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
-                }`}
-                title="Magnet selection"
-              >
-                <Sparkles className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => setActiveTool('marquee')}
-                className={`p-2 rounded-xl transition ${
-                  activeTool === 'marquee'
-                    ? 'bg-blue-500 text-white shadow-sm'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
-                }`}
-                title="Marquee select"
-              >
-                <Layers className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => setActiveTool('polygon')}
-                className={`p-2 rounded-xl transition ${
-                  activeTool === 'polygon'
-                    ? 'bg-blue-500 text-white shadow-sm'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
-                }`}
-                title="Polygon boundary"
-              >
-                <Sliders className="w-4 h-4" />
-              </button>
+            {/* Sector Map Title */}
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-bold font-sans text-slate-800">
+                Spatial Sector Matrix
+              </span>
+              <span className="text-[11px] font-mono text-slate-400">
+                Sub-Level Grid
+              </span>
             </div>
 
             {/* Zoom & Fullscreen Controls */}

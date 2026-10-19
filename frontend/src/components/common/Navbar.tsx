@@ -9,6 +9,7 @@ import {
   Share2,
   Printer,
   RotateCw,
+  MessageSquare,
   ChevronDown,
 } from 'lucide-react';
 import { useSafety } from '../../context/SafetyContext';
@@ -39,6 +40,7 @@ export const Navbar: React.FC<Props> = ({
       isCritical: criticalAlertCount > 0,
     },
     { id: 'workers', label: 'Ecology', icon: Wind },
+    { id: 'comms', label: 'Comms', icon: MessageSquare },
     { id: 'history', label: 'Reports', icon: FileText },
   ];
 
@@ -48,50 +50,38 @@ export const Navbar: React.FC<Props> = ({
         {/* Left: Brand & Hazard Mark */}
         <div className="flex items-center space-x-3">
           {/* Yellow/Black hazard stripe mark */}
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-2">
             <div className="w-5 h-5 rounded-md bg-hazard-stripes shadow-sm" />
             <span className="text-base font-extrabold tracking-wider text-slate-900 font-sans">
               SENTINEL<span className="text-amber-500">X</span>
             </span>
-          </div>
-
-          <div className="h-4 w-px bg-slate-300 hidden sm:block" />
-
-          {/* Site Title with refresh icon */}
-          <div className="flex items-center space-x-2">
-            <h1 className="text-lg font-bold text-slate-900 tracking-tight">
-              Rocanville Mine
-            </h1>
             <button
               onClick={() => refreshData()}
-              className="p-1 rounded-full text-slate-500 hover:text-slate-800 hover:bg-white/60 transition"
+              className="p-1.5 rounded-full text-slate-400 hover:text-slate-800 hover:bg-white/80 transition shadow-2xs ml-1"
               title="Refresh live data"
             >
               <RotateCw className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          {/* Level / Entrance Dropdown Pills */}
-          <div className="hidden lg:flex items-center space-x-2 text-xs">
-            <div className="flex items-center bg-white px-3 py-1 rounded-full border border-slate-200/80 shadow-sm text-slate-700 font-medium">
-              <span>Level 8</span>
-              <ChevronDown className="w-3.5 h-3.5 ml-1 text-slate-400" />
-            </div>
+          <div className="h-4 w-px bg-slate-300 hidden sm:block" />
 
-            <div className="flex items-center bg-white px-3 py-1 rounded-full border border-slate-200/80 shadow-sm text-slate-700 font-medium">
-              <select
-                value={selectedZone}
-                onChange={(e) => setSelectedZone(e.target.value)}
-                className="bg-transparent border-none text-slate-700 text-xs focus:outline-none cursor-pointer pr-1"
-              >
-                <option value="All">All Entrances &amp; Zones</option>
-                <option value="Zone A - Extraction Pit">Entrance B — Extraction Pit</option>
-                <option value="Zone B - Shaft 3">Entrance C — Shaft 3</option>
-                <option value="Zone C - Processing Plant">Entrance D — Processing Plant</option>
-              </select>
-            </div>
+          {/* Entrance Dropdown Pill (Level 8 box removed) */}
+          <div className="hidden sm:flex items-center bg-white px-3 py-1 rounded-full border border-slate-200/80 shadow-2xs text-slate-700 font-medium text-xs">
+            <select
+              value={selectedZone}
+              onChange={(e) => setSelectedZone(e.target.value)}
+              className="bg-transparent border-none text-slate-700 text-xs focus:outline-none cursor-pointer pr-1 font-sans"
+            >
+              <option value="All">All Entrances &amp; Zones</option>
+              <option value="Zone A - Extraction Pit">Entrance B — Extraction Pit</option>
+              <option value="Zone B - Shaft 3">Entrance C — Shaft 3</option>
+              <option value="Zone C - Processing Plant">Entrance D — Processing Plant</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 pointer-events-none" />
           </div>
         </div>
+
 
         {/* Center: Rounded Pill Navigation (Matches reference image) */}
         <div className="flex items-center bg-white/90 backdrop-blur p-1 rounded-full border border-slate-200/90 shadow-sm overflow-x-auto">
