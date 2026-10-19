@@ -23,16 +23,16 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#ECEEF1] text-slate-800 font-sans selection:bg-amber-200">
-      {/* Top Industrial Navigation */}
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        selectedZone={selectedZone}
-        setSelectedZone={setSelectedZone}
-      />
-
-      {/* Emergency Audio/Visual Banner */}
-      <EmergencyBanner onGoToEmergency={() => setActiveTab('emergency')} />
+      {/* Top Sticky Industrial Navigation + Emergency Banner */}
+      <div className="sticky top-0 z-40 w-full bg-[#ECEEF1]/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
+        <Navbar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          selectedZone={selectedZone}
+          setSelectedZone={setSelectedZone}
+        />
+        <EmergencyBanner onGoToEmergency={() => setActiveTab('emergency')} />
+      </div>
 
       {/* Main Container with Left Sidebar Rail and Dashboard Canvas */}
       <div className="flex-1 flex max-w-[1720px] w-full mx-auto">
@@ -40,7 +40,7 @@ const AppContent: React.FC = () => {
         <SidebarIconRail activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* Dashboard Main Content */}
-        <main className="flex-1 w-full p-2 sm:p-4 overflow-x-hidden">
+        <main className="flex-1 w-full p-2 sm:p-4 overflow-x-clip">
           {activeTab === 'overview' && (
             <OverviewPage
               onSelectWorker={handleSelectWorker}

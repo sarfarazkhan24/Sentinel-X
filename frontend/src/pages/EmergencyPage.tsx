@@ -76,6 +76,7 @@ export const EmergencyPage: React.FC = () => {
         <div className="space-y-3">
           {activeIncidents.map((incident) => {
             const isCritical = incident.severity === 'CRITICAL';
+            const isWarning = incident.severity === 'WARNING' || incident.severity === 'HIGH_RISK';
             const isAcknowledged = incident.status === 'ACKNOWLEDGED';
             const isBusy = actionInProgress === incident.incidentId;
 
@@ -85,6 +86,8 @@ export const EmergencyPage: React.FC = () => {
                 className={`rounded-[24px] border p-5 transition duration-200 shadow-xs ${
                   isCritical
                     ? 'bg-rose-50/70 border-rose-300 ring-2 ring-rose-100'
+                    : isWarning
+                    ? 'bg-amber-50/30 border-amber-300 ring-1 ring-amber-100'
                     : 'bg-white border-slate-200/90'
                 }`}
               >
@@ -104,10 +107,12 @@ export const EmergencyPage: React.FC = () => {
                         Helmet: {incident.helmetId}
                       </span>
                       <span
-                        className={`text-xs font-mono px-2 py-0.5 rounded-full font-bold shadow-2xs ${
+                        className={`text-xs font-mono px-2.5 py-0.5 rounded-full font-bold shadow-2xs ${
                           isAcknowledged
                             ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                            : 'bg-rose-600 text-white animate-pulse'
+                            : isCritical
+                            ? 'bg-rose-600 text-white animate-pulse'
+                            : 'bg-amber-500 text-white'
                         }`}
                       >
                         {incident.status}

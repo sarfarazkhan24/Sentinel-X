@@ -9,7 +9,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { HardHat, Activity, Heart, Wind, Thermometer, ShieldAlert, RefreshCw } from 'lucide-react';
-import { useSafety } from '../context/SafetyContext';
+import { useSafety, getWorkerSeverityTier } from '../context/SafetyContext';
 import { fetchWorkerHistory } from '../services/api';
 import { SensorReading } from '../types';
 import { SeverityBadge } from '../components/common/SeverityBadge';
@@ -85,7 +85,7 @@ export const WorkerDetailsPage: React.FC<Props> = ({ selectedWorkerId, onSelectW
               <span className="text-xs font-mono bg-slate-100 text-slate-700 font-bold px-2.5 py-0.5 rounded-full border border-slate-200 shadow-2xs">
                 {currentWorker?.workerId}
               </span>
-              <SeverityBadge severity={currentWorker?.riskLevel || 'NORMAL'} size="sm" />
+              <SeverityBadge severity={currentWorker ? getWorkerSeverityTier(currentWorker) : 'NORMAL'} size="sm" />
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
               Zone: {currentWorker?.assignedZone} &bull; Helmet: {currentWorker?.helmetId} &bull; Status: {currentWorker?.connectivityStatus}

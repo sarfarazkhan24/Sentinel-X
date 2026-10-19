@@ -50,12 +50,12 @@ export const Navbar: React.FC<Props> = ({
       <div className="max-w-[1720px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Left: Brand & Hazard Mark */}
         <div className="flex items-center space-x-3">
-          {/* Unique Blue & Black SentinelX Brand */}
+          {/* Native Industrial SentinelX Brand */}
           <div className="flex items-center space-x-1">
             <SentinelXLogo size={32} withWordmark={true} />
             <button
               onClick={() => refreshData()}
-              className="p-1.5 rounded-full text-slate-400 hover:text-blue-600 hover:bg-white/80 transition shadow-2xs ml-0.5"
+              className="p-1.5 rounded-full text-slate-400 hover:text-amber-600 hover:bg-white/80 transition shadow-2xs ml-0.5"
               title="Refresh live data"
             >
               <RotateCw className="w-3.5 h-3.5" />
@@ -170,14 +170,14 @@ export const Navbar: React.FC<Props> = ({
             )}
           </button>
 
-          {/* Operator Profile Avatar with Indian Name & Blue/Black Accent */}
+          {/* Operator Profile Avatar with Indian Name & Industrial Accent */}
           <div className="flex items-center space-x-2 bg-white pl-1 pr-3 py-1 rounded-full border border-slate-200/80 shadow-sm">
-            <div className="w-7 h-7 rounded-full bg-[#0B0F17] border border-blue-500/50 flex items-center justify-center text-blue-400 font-bold text-xs shadow-inner">
+            <div className="w-7 h-7 rounded-full bg-[#18191B] border border-amber-500/50 flex items-center justify-center text-amber-400 font-bold text-xs shadow-inner">
               👷
             </div>
             <div className="text-left hidden md:block">
               <div className="text-xs font-bold text-slate-800 leading-tight">Rajesh Nair</div>
-              <div className="text-[10px] text-blue-600 font-mono font-medium leading-none">Safety Director</div>
+              <div className="text-[10px] text-amber-700 font-mono font-medium leading-none">Safety Director</div>
             </div>
           </div>
         </div>

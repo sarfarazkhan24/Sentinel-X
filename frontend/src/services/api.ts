@@ -1,6 +1,10 @@
 import { Worker, Incident, SensorReading } from '../types';
 
-const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:5001';
+const BACKEND_URL =
+  (import.meta as any).env?.VITE_BACKEND_URL ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+    ? 'https://sentinel-x-slgq.onrender.com'
+    : 'http://localhost:5001');
 const API_BASE = `${BACKEND_URL}/api`;
 
 export async function fetchWorkers(): Promise<Worker[]> {

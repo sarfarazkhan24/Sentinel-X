@@ -1,6 +1,6 @@
 import React from 'react';
 import { Heart, Activity, Wind, Thermometer, Droplets, Radio, Clock, ArrowRight } from 'lucide-react';
-import { useSafety } from '../context/SafetyContext';
+import { useSafety, getWorkerSeverityTier, SeverityTier } from '../context/SafetyContext';
 import { SeverityBadge } from '../components/common/SeverityBadge';
 import { SourceBadge } from '../components/common/SourceBadge';
 
@@ -40,15 +40,18 @@ export const LiveMonitoringPage: React.FC<Props> = ({ onSelectWorker }) => {
         {workers.map((worker) => {
           const r = worker.latestReading;
           const isOnline = worker.connectivityStatus === 'ONLINE';
-          const risk = worker.riskLevel || (worker.hasActiveAlert ? 'CRITICAL' : 'NORMAL');
-          const isCritical = risk === 'CRITICAL';
+          const tier: SeverityTier = getWorkerSeverityTier(worker);
+          const isCritical = tier === 'CRITICAL';
+          const isWarning = tier === 'WARNING';
 
           return (
             <div
               key={worker.workerId}
               className={`bg-white rounded-[24px] border transition duration-200 overflow-hidden shadow-xs hover:shadow-md ${
                 isCritical
-                  ? 'border-rose-400 ring-2 ring-rose-200'
+                  ? 'border-rose-400 ring-2 ring-rose-200/90 bg-rose-50/15'
+                  : isWarning
+                  ? 'border-amber-300 ring-1 ring-amber-200/70 bg-amber-50/10'
                   : 'border-slate-200/90 hover:border-slate-300'
               }`}
             >
@@ -87,7 +90,7 @@ export const LiveMonitoringPage: React.FC<Props> = ({ onSelectWorker }) => {
               {/* Status & Risk Banner */}
               <div className="px-4 py-2 bg-white border-b border-slate-100 flex items-center justify-between">
                 <span className="text-xs text-slate-500 font-medium">Hazard Status:</span>
-                <SeverityBadge severity={risk} size="sm" />
+                <SeverityBadge severity={tier} size="sm" />
               </div>
 
               {/* Sensor Readings Body */}
