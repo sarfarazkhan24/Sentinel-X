@@ -2,17 +2,9 @@ import React, { useState } from 'react';
 import {
   AlertTriangle,
   ChevronDown,
-  ChevronUp,
   Maximize2,
   Plus,
   Minus,
-  Filter,
-  X,
-  Flag,
-  Globe,
-  RotateCcw,
-  ArrowLeftRight,
-  Scale,
   HardHat,
   Truck,
   Box,
@@ -21,18 +13,9 @@ import {
   Activity,
   Heart,
   Wind,
-  Sliders,
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  Tooltip,
-} from 'recharts';
 
 import { useSafety } from '../context/SafetyContext';
-import { SeverityBadge } from '../components/common/SeverityBadge';
 import { SourceBadge } from '../components/common/SourceBadge';
 
 interface Props {
@@ -40,33 +23,14 @@ interface Props {
   onGoToEmergency: () => void;
 }
 
-// Organic multi-layer wave data matching the Rocanville mine curve
-const waveData = [
-  { node: 'AA', upper: 45, mid: 28, lower: 12 },
-  { node: 'AB', upper: 52, mid: 34, lower: 16 },
-  { node: 'BA', upper: 68, mid: 48, lower: 25 },
-  { node: 'CA', upper: 82, mid: 62, lower: 38 },
-  { node: 'DA', upper: 75, mid: 54, lower: 30 },
-  { node: 'AC', upper: 58, mid: 40, lower: 20 },
-  { node: 'AD', upper: 62, mid: 44, lower: 24 },
-  { node: 'BB', upper: 85, mid: 66, lower: 42 },
-  { node: 'CB', upper: 72, mid: 50, lower: 28 },
-  { node: 'DA', upper: 60, mid: 38, lower: 18 },
-];
-
 export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency }) => {
   const {
     workers,
-    activeIncidents,
     onlineCount,
     offlineCount,
-    criticalAlertCount,
   } = useSafety();
 
-  const [selectedSection, setSelectedSection] = useState<'S9' | 'S10' | 'S11' | 'S12'>('S9');
   const [zoomLevel, setZoomLevel] = useState<number>(100);
-  const [wagonsOpen, setWagonsOpen] = useState<boolean>(true);
-  const [workersOpen, setWorkersOpen] = useState<boolean>(false);
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
 
   // Map 3 workers to specific mine sectors
@@ -153,12 +117,12 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
         </div>
       </section>
 
-      {/* 2. MAIN 3-COLUMN INDUSTRIAL COMMAND GRID */}
+      {/* 2. MAIN 2-COLUMN INDUSTRIAL COMMAND GRID */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
         {/* ========================================================= */}
-        {/* LEFT COLUMN: Worker Cards Stack (3 cols on xl)             */}
+        {/* LEFT COLUMN: Worker Cards Stack (4 cols on xl)             */}
         {/* ========================================================= */}
-        <div className="xl:col-span-3 space-y-3.5">
+        <div className="xl:col-span-4 space-y-3.5">
           {/* Card 1: Worker 1 (Alex Carter / H-201) */}
           <div
             onClick={() => worker1 && onSelectWorker(worker1.workerId)}
@@ -442,9 +406,9 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
         </div>
 
         {/* ========================================================= */}
-        {/* CENTER COLUMN: Spatial Sector Grid (6 cols on xl)          */}
+        {/* RIGHT COLUMN: Spatial Sector Grid (8 cols on xl)           */}
         {/* ========================================================= */}
-        <div className="xl:col-span-6 space-y-3">
+        <div className="xl:col-span-8 space-y-3">
           {/* Top Floating Controls Bar */}
           <div className="flex items-center justify-between">
             {/* Sector Map Title */}
@@ -764,283 +728,6 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* ========================================================= */}
-        {/* RIGHT COLUMN: Headline Analytics & Wagons (3 cols on xl)   */}
-        {/* ========================================================= */}
-        <div className="xl:col-span-3 space-y-3.5">
-          {/* Top Compliance & Remaining Ore Headline Card */}
-          <div className="bg-white rounded-[24px] p-4.5 border border-slate-200/90 shadow-xs space-y-3">
-            {/* Headline Metric with Quick Action Buttons */}
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="text-2xl font-black text-slate-900 tracking-tight font-sans">
-                  19,300,175 <span className="text-sm font-semibold text-slate-400">mt</span>
-                </div>
-                <div className="text-xs font-medium text-slate-500 mt-0.5">
-                  Entrance B &mdash; Tin remaining
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-1.5">
-                <button
-                  className="p-1.5 rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition"
-                  title="Filter view"
-                >
-                  <Filter className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  className="p-1.5 rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition"
-                  title="Close section"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Sub-tabs: S9 (Active), S10, S11, S12 */}
-            <div className="flex items-center space-x-4 border-b border-slate-100 pb-2 text-xs font-semibold">
-              {(['S9', 'S10', 'S11', 'S12'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setSelectedSection(tab)}
-                  className={`pb-1 transition ${
-                    selectedSection === tab
-                      ? 'text-slate-900 border-b-2 border-slate-900 font-bold'
-                      : 'text-slate-400 hover:text-slate-700'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            {/* Tags: Place of development & Remaining Pill */}
-            <div className="space-y-1.5">
-              <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                Place of development
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-1.5">
-                  <span className="bg-[#FFAA4C] text-slate-900 font-bold px-2 py-0.5 rounded-full text-[10px] shadow-2xs">
-                    S9-BA
-                  </span>
-                  <span className="bg-[#FFAA4C] text-slate-900 font-bold px-2 py-0.5 rounded-full text-[10px] shadow-2xs">
-                    S9-BB
-                  </span>
-                </div>
-
-                <div className="bg-blue-600 text-white font-bold px-3 py-0.5 rounded-full text-[11px] shadow-2xs">
-                  1,030,874 mt
-                </div>
-              </div>
-            </div>
-
-            {/* Organic Multi-Layer Stream / Wave Area Graph */}
-            <div className="h-32 w-full pt-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={waveData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="waveUpper" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2D3748" stopOpacity={0.85} />
-                      <stop offset="95%" stopColor="#1A202C" stopOpacity={0.4} />
-                    </linearGradient>
-                    <linearGradient id="waveMid" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#718096" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#A0AEC0" stopOpacity={0.25} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="node" stroke="#A0AEC0" fontSize={9} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#18191B', borderRadius: '8px', color: '#FFF' }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="upper"
-                    stroke="#1A202C"
-                    fill="url(#waveUpper)"
-                    strokeWidth={1.5}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="mid"
-                    stroke="#4A5568"
-                    fill="url(#waveMid)"
-                    strokeWidth={1.5}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Baseline Metric Numbers: 0.0 | 298,721 | 0.0 */}
-            <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 border-t border-slate-100 pt-2">
-              <span>0.0</span>
-              <span className="font-bold text-slate-800 text-xs">298,721</span>
-              <span>0.0</span>
-            </div>
-
-            {/* Segmented Pill Filters */}
-            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono pt-1">
-              <div className="bg-slate-100 text-slate-700 font-semibold p-1.5 rounded-lg text-center border border-slate-200/80">
-                BA &mdash; 233K / 896K MT
-              </div>
-              <div className="bg-slate-100 text-slate-700 font-semibold p-1.5 rounded-lg text-center border border-slate-200/80">
-                BB &mdash; 797K / 1.1KK MT
-              </div>
-            </div>
-          </div>
-
-          {/* Accordion 1: Workers */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-            <button
-              onClick={() => setWorkersOpen(!workersOpen)}
-              className="w-full p-3.5 flex items-center justify-between text-xs font-semibold text-slate-800 hover:bg-slate-50 transition"
-            >
-              <div className="flex items-center space-x-2">
-                <span className="font-bold">Workers</span>
-                <span className="flex items-center space-x-1 text-slate-500 font-mono text-[11px]">
-                  <HardHat className="w-3.5 h-3.5 text-slate-400" />
-                  <span>296/296</span>
-                </span>
-                <span className="text-slate-400">&bull;</span>
-                <span className="text-slate-500 font-mono text-[11px]">84%</span>
-              </div>
-              {workersOpen ? (
-                <ChevronUp className="w-4 h-4 text-slate-400" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-slate-400" />
-              )}
-            </button>
-
-            {workersOpen && (
-              <div className="p-3 border-t border-slate-100 space-y-2 bg-slate-50/50 text-xs font-mono">
-                {workers.map((w) => (
-                  <div
-                    key={w.workerId}
-                    onClick={() => onSelectWorker(w.workerId)}
-                    className="p-2 rounded-lg bg-white border border-slate-200/80 flex items-center justify-between cursor-pointer hover:border-slate-300"
-                  >
-                    <div>
-                      <div className="font-bold text-slate-900">{w.name}</div>
-                      <div className="text-[10px] text-slate-400">{w.assignedZone}</div>
-                    </div>
-                    <SeverityBadge severity={w.riskLevel || 'NORMAL'} size="sm" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Accordion 2: Wagons & Emergencies (Matches reference image) */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-            <button
-              onClick={() => setWagonsOpen(!wagonsOpen)}
-              className="w-full p-3.5 flex items-center justify-between text-xs font-semibold text-slate-800 hover:bg-slate-50 transition"
-            >
-              <div className="flex items-center space-x-2">
-                <span className="font-bold">Wagons &amp; Transports</span>
-                <span className={`text-white font-mono text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center space-x-1 shadow-2xs ${criticalAlertCount > 0 ? 'bg-rose-600 animate-pulse' : 'bg-rose-500'}`}>
-                  <AlertTriangle className="w-3 h-3 text-white" />
-                  <span>{activeIncidents.length > 0 ? `${activeIncidents.length} INCIDENTS` : '317/318'}</span>
-                </span>
-
-              </div>
-              {wagonsOpen ? (
-                <ChevronUp className="w-4 h-4 text-slate-400" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-slate-400" />
-              )}
-            </button>
-
-            {wagonsOpen && (
-              <div className="p-3.5 border-t border-slate-100 space-y-3 bg-white">
-                {/* Active Wagon Detail Card: WG09-31 */}
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-bold text-slate-900 text-sm font-mono">
-                        WG09-31
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono">
-                        Transport ID
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="text-xs font-bold font-mono text-slate-800">
-                        5:13:38
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono">
-                        Uptime
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="text-xs font-bold font-mono text-slate-800">
-                        27.5 <span className="text-[10px] font-normal text-slate-400">mt</span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono">
-                        Delivered
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Wagon Loading Bar: Loading 72% */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-700">
-                      <span>Loading 72%</span>
-                      <span className="text-slate-400 font-mono text-[10px]">-0:03:28</span>
-                    </div>
-                    <div className="relative h-2 w-full rounded-full bg-slate-200 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-slate-800"
-                        style={{ width: '72%' }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-[9px] font-mono text-slate-400">
-                      <span>0 kg</span>
-                      <span className="font-bold text-slate-700">▲ 602 kg</span>
-                      <span>750 kg</span>
-                    </div>
-                  </div>
-
-                  {/* Toolbar icons: Flag, Globe, Undo, Switch, Sliders, Scale */}
-                  <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between text-slate-400">
-                    <button className="p-1 hover:text-slate-700 transition" title="Mark wagon">
-                      <Flag className="w-3.5 h-3.5" />
-                    </button>
-                    <button className="p-1 hover:text-slate-700 transition" title="GPS Coordinates">
-                      <Globe className="w-3.5 h-3.5" />
-                    </button>
-                    <button className="p-1 hover:text-slate-700 transition" title="Re-route wagon">
-                      <RotateCcw className="w-3.5 h-3.5" />
-                    </button>
-                    <button className="p-1 hover:text-slate-700 transition" title="Switch path">
-                      <ArrowLeftRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button className="p-1 hover:text-slate-700 transition" title="Tune payload">
-                      <Sliders className="w-3.5 h-3.5" />
-                    </button>
-                    <button className="p-1 hover:text-slate-700 transition" title="Weigh station">
-                      <Scale className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Second Wagon Preview: WG09-43 */}
-                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between text-xs font-mono">
-                  <div>
-                    <span className="font-bold text-slate-800">WG09-43</span>
-                    <span className="text-slate-400 text-[10px] ml-2">4:51:05</span>
-                  </div>
-                  <div className="text-slate-600 font-semibold">
-                    26.8 mt
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
