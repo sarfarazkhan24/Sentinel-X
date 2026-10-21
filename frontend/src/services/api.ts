@@ -80,6 +80,11 @@ export interface NearbyMiningActivity {
   impactDescription: string;
   source: string;
   timestamp: string;
+  publishedAt?: string;
+  url?: string;
+  geoScope?: string;
+  relevanceScore?: number;
+  locationName?: string;
 }
 
 export interface ScraperResponse {

@@ -19,6 +19,7 @@ export interface NearbyMiningActivity {
   impactDescription: string;
   source: string;
   timestamp: string;
+  publishedAt?: string;
   url?: string;
   geoScope?: string;
   relevanceScore?: number;
@@ -834,6 +835,7 @@ export class RegionalScraperService {
       impactDescription: art.impactDescription,
       source: art.source,
       timestamp: this.formatTimestamp(art.publishedAt),
+      publishedAt: art.publishedAt.toISOString(),
       url: art.url,
       geoScope: art.geoScope,
       relevanceScore: art.relevanceScore,

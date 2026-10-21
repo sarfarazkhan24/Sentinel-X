@@ -123,16 +123,17 @@ export const OverviewPage: React.FC<Props> = ({ onSelectWorker, onGoToEmergency 
     return 'May affect: Sub-level air circulation & ambient exhaust flow';
   };
 
-  // Sort activities so most relevant (e.g. Blasting affecting Shaft 3) is always first
+  // Sort activities chronologically so latest date articles appear on top
   const filteredActivities = activities.filter(
     (act) => filterCategory === 'ALL' || act.category === filterCategory
   );
   const sortedActivities = [...filteredActivities].sort((a, b) => {
-    if (a.category === 'Blasting' && b.category !== 'Blasting') return -1;
-    if (b.category === 'Blasting' && a.category !== 'Blasting') return 1;
-    if (a.riskLevel === 'HIGH' && b.riskLevel !== 'HIGH') return -1;
-    if (b.riskLevel === 'HIGH' && a.riskLevel !== 'HIGH') return 1;
-    return 0;
+    const timeA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    const timeB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+    if (timeB !== timeA) {
+      return timeB - timeA; // Latest date on top
+    }
+    return (b.relevanceScore || 0) - (a.relevanceScore || 0);
   });
 
   const primaryActivity = sortedActivities[0];
