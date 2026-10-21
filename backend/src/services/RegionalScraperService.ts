@@ -59,7 +59,7 @@ const VERIFIED_HISTORICAL_BENCHMARKS = [
     internalCategory: 'Mining Accidents and Safety',
     riskLevel: 'HIGH' as const,
     status: 'ACTIVE NOW' as const,
-    relevanceScore: 95.0,
+    relevanceScore: 78.0,
     isVerified: true,
     company: 'Madapatna Stone Quarry & Crusher Leaseholders',
   },
@@ -82,7 +82,7 @@ const VERIFIED_HISTORICAL_BENCHMARKS = [
     internalCategory: 'Blasting and Excavation',
     riskLevel: 'HIGH' as const,
     status: 'ACTIVE NOW' as const,
-    relevanceScore: 92.0,
+    relevanceScore: 75.0,
     isVerified: true,
     company: 'Udayashankar Kaveri Quarry & Crusher Unit',
   },
@@ -105,7 +105,7 @@ const VERIFIED_HISTORICAL_BENCHMARKS = [
     internalCategory: 'Mining Operations & Closure',
     riskLevel: 'HIGH' as const,
     status: 'ACTIVE NOW' as const,
-    relevanceScore: 90.0,
+    relevanceScore: 74.0,
     isVerified: true,
     company: 'Sai Ram Quarry Operations',
   },
@@ -644,14 +644,16 @@ export class RegionalScraperService {
     else if (riskLevel === 'MODERATE') score += 20;
     else score += 10;
 
-    // 3. Recency (max 15 pts)
+    // 3. Recency (max 25 pts) - Strong boost for current October news
     const ageDays = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60 * 24);
-    if (ageDays <= 2) score += 15;
-    else if (ageDays <= 7) score += 12;
-    else if (ageDays <= 30) score += 8;
-    else score += 5;
+    if (ageDays <= 3) score += 25;
+    else if (ageDays <= 7) score += 20;
+    else if (ageDays <= 14) score += 15;
+    else if (ageDays <= 30) score += 10;
+    else if (ageDays <= 60) score += 5;
+    else score += 0;
 
-    // 4. Source Credibility (max 15 pts)
+    // 4. Source Credibility (max 10 pts)
     const establishedSources = [
       'the hindu',
       'the indian express',
@@ -806,7 +808,7 @@ export class RegionalScraperService {
     }
 
     let articles = await prisma.regionalArticle.findMany({
-      orderBy: [{ relevanceScore: 'desc' }, { publishedAt: 'desc' }],
+      orderBy: [{ publishedAt: 'desc' }, { relevanceScore: 'desc' }],
       take: 20,
     });
 
@@ -814,7 +816,7 @@ export class RegionalScraperService {
     if (articles.length === 0) {
       await this.seedVerifiedHistoricalArticles();
       articles = await prisma.regionalArticle.findMany({
-        orderBy: [{ relevanceScore: 'desc' }, { publishedAt: 'desc' }],
+        orderBy: [{ publishedAt: 'desc' }, { relevanceScore: 'desc' }],
         take: 20,
       });
     }
@@ -831,7 +833,7 @@ export class RegionalScraperService {
       status: art.status as any,
       impactDescription: art.impactDescription,
       source: art.source,
-      timestamp: idx === 0 && art.status === 'ACTIVE NOW' ? 'Live (Just now)' : this.formatTimestamp(art.publishedAt),
+      timestamp: this.formatTimestamp(art.publishedAt),
       url: art.url,
       geoScope: art.geoScope,
       relevanceScore: art.relevanceScore,
