@@ -114,3 +114,33 @@ model AlertReceipt {
   @@index([incidentId])
   @@map("alert_receipts")
 }
+
+model RegionalArticle {
+  id                 String    @id @default(uuid()) @map("id")
+  externalId         String?   @unique @map("external_id")
+  url                String    @unique @map("url")
+  title              String    @map("title")
+  source             String    @map("source")
+  author             String?   @map("author")
+  publishedAt        DateTime  @map("published_at")
+  retrievedAt        DateTime  @default(now()) @map("retrieved_at")
+  summary            String    @map("summary")
+  impactDescription  String    @map("impact_description")
+  locationName       String    @map("location_name")
+  coordinates        String?   @map("coordinates")
+  distanceKm         Float     @map("distance_km")
+  direction          String    @default("NE") @map("direction")
+  geoScope           String    @default("NEARBY") @map("geo_scope") // NEARBY, LOCAL_AREA, REGIONAL
+  category           String    @map("category") // Blasting, Excavation, Heavy Transport, Drilling, Structural Concrete
+  internalCategory   String?   @map("internal_category")
+  riskLevel          String    @default("MODERATE") @map("risk_level") // LOW, MODERATE, HIGH
+  status             String    @default("ACTIVE NOW") @map("status") // ACTIVE NOW, SCHEDULED, STANDBY
+  relevanceScore     Float     @default(50.0) @map("relevance_score")
+  isVerified         Boolean   @default(true) @map("is_verified")
+
+  @@index([geoScope])
+  @@index([category])
+  @@index([publishedAt])
+  @@index([relevanceScore])
+  @@map("regional_articles")
+}

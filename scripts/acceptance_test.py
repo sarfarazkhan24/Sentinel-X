@@ -3,12 +3,13 @@ import time
 import json
 import urllib.request
 from datetime import datetime, timezone
+import os
 import paho.mqtt.client as mqtt
 
 BACKEND_URL = "http://127.0.0.1:5001"
 FRONTEND_URL = "http://127.0.0.1:5174"
-MQTT_HOST = "127.0.0.1"
-MQTT_PORT = 1883
+MQTT_HOST = os.getenv("MQTT_HOST", "broker.emqx.io")
+MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 
 def log_step(num, title):
     print(f"\n=======================================================")

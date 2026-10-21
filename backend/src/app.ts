@@ -6,6 +6,7 @@ import { apiRouter } from './routes/index.js';
 import { initSocketServer } from './socket/io.js';
 import { initMqttClient } from './mqtt/client.js';
 import { HeartbeatService } from './services/heartbeat.service.js';
+import { regionalScraperService } from './services/RegionalScraperService.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -53,6 +54,7 @@ async function ensureWorkerRosterSync() {
 // Start Server
 server.listen(config.port, () => {
   ensureWorkerRosterSync();
+  regionalScraperService.initialize();
   console.log(`
 ==========================================================
    SENTINELX: INDUSTRIAL SAFETY MONITORING SERVER
