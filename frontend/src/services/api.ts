@@ -96,9 +96,20 @@ export interface ScraperResponse {
   activities: NearbyMiningActivity[];
 }
 
+import { FALLBACK_REGIONAL_ACTIVITIES } from './fallbackRegionalActivities';
+
 export async function fetchNearbyActivities(): Promise<ScraperResponse> {
-  const res = await fetch(`${API_BASE}/scraper/nearby-activities`);
-  if (!res.ok) throw new Error('Failed to fetch nearby activities');
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE}/scraper/nearby-activities`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.activities && data.activities.length > 0) {
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn('[API] Scraper endpoint unreachable, using verified regional activity fallback:', err);
+  }
+  return FALLBACK_REGIONAL_ACTIVITIES;
 }
 
